@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NBA Hub</title>
+  <meta name="description" content="Próximos partidos, temporada regular, NBA Cup, campeones, historia, equipos y jugadores de la NBA." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏀</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="#inicio" class="brand"><span class="ball">🏀</span> NBA<span>HUB</span></a>
+    <button class="menu-btn" aria-label="Abrir menú" aria-expanded="false">☰</button>
+    <nav class="nav">
+      <a href="#inicio">Inicio</a>
+      <a href="#calendario">Partidos</a>
+      <a href="#clasificacion">Clasificación</a>
+      <a href="#nbacup">NBA Cup</a>
+      <a href="#campeones">Campeones</a>
+      <a href="#historia">Historia</a>
+      <a href="#equipos">Equipos</a>
+      <a href="#jugadores">Jugadores</a>
+      <a href="#extras">Récords y Trivia</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- INICIO -->
+    <section id="inicio" class="view">
+      <div class="hero">
+        <div>
+          <p class="eyebrow">Temporada 2026-27</p>
+          <h1>Todo sobre la NBA,<br />en un solo sitio.</h1>
+          <p class="lead">Próximos partidos, resultados, clasificación, NBA Cup, campeones históricos, equipos y jugadores.</p>
+          <div class="countdown" id="countdown"></div>
+        </div>
+        <div class="hero-champ">
+          <img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="New York Knicks" />
+          <div>
+            <small>Campeón vigente</small>
+            <strong>New York Knicks</strong>
+            <span>Finales 2026 · 4-1 vs Spurs · MVP: Jalen Brunson</span>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Próximos partidos</h2>
+      <div id="upcoming" class="games"></div>
+    </section>
+
+    <!-- CALENDARIO / TEMPORADA REGULAR -->
+    <section id="calendario" class="view">
+      <h2 class="section-title">Partidos de temporada regular</h2>
+      <div class="toolbar">
+        <button class="btn" data-day="-1">◀ Día anterior</button>
+        <input type="date" id="day-picker" />
+        <button class="btn" data-day="1">Día siguiente ▶</button>
+        <button class="btn ghost" data-day="0">Hoy</button>
+      </div>
+      <div id="day-games" class="games"></div>
+    </section>
+
+    <!-- CLASIFICACIÓN -->
+    <section id="clasificacion" class="view">
+      <h2 class="section-title">Clasificación</h2>
+      <p class="muted">Del 1º al 6º, playoffs directos · del 7º al 10º, play-in.</p>
+      <div id="standings" class="standings"></div>
+    </section>
+
+    <!-- NBA CUP -->
+    <section id="nbacup" class="view">
+      <h2 class="section-title">Emirates NBA Cup</h2>
+      <div class="cup-intro card">
+        <p>La <strong>NBA Cup</strong> es el torneo de temporada que se disputa desde 2023. Los 30 equipos se reparten en
+          <strong>6 grupos de 5</strong> (3 por conferencia). Pasan a cuartos los 6 líderes de grupo y los
+          2 mejores segundos (uno por conferencia). Semifinales y final se juegan a partido único. Todos los partidos,
+          salvo la final, cuentan para la temporada regular.</p>
+      </div>
+      <h3 class="sub">Calendario 2026</h3>
+      <div id="cup-dates" class="timeline-row"></div>
+      <h3 class="sub">Finales de la NBA Cup</h3>
+      <div id="cup-finals" class="cup-grid"></div>
+      <h3 class="sub">Partidos de la Copa (en vivo)</h3>
+      <div id="cup-games" class="games"></div>
+    </section>
+
+    <!-- CAMPEONES -->
+    <section id="campeones" class="view">
+      <h2 class="section-title">Campeones de la NBA</h2>
+      <div class="toolbar">
+        <input type="search" id="champ-search" placeholder="Buscar equipo, jugador o año…" />
+        <select id="champ-decade"></select>
+      </div>
+      <div id="titles-chart" class="titles-chart"></div>
+      <div class="table-wrap">
+        <table class="table" id="finals-table">
+          <thead><tr><th>Año</th><th>Campeón</th><th>Resultado</th><th>Subcampeón</th><th>MVP de las Finales</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- HISTORIA -->
+    <section id="historia" class="view">
+      <h2 class="section-title">Historia de la NBA</h2>
+      <div id="timeline" class="timeline"></div>
+    </section>
+
+    <!-- EQUIPOS -->
+    <section id="equipos" class="view">
+      <h2 class="section-title">Equipos</h2>
+      <div class="toolbar">
+        <div class="chips" id="team-filter">
+          <button class="chip active" data-conf="all">Todos</button>
+          <button class="chip" data-conf="Este">Este</button>
+          <button class="chip" data-conf="Oeste">Oeste</button>
+        </div>
+      </div>
+      <div id="teams" class="team-grid"></div>
+    </section>
+
+    <!-- JUGADORES -->
+    <section id="jugadores" class="view">
+      <h2 class="section-title">Jugadores</h2>
+      <h3 class="sub">Plantillas actuales</h3>
+      <div class="toolbar">
+        <select id="roster-team"></select>
+        <input type="search" id="roster-search" placeholder="Filtrar por nombre o posición…" />
+      </div>
+      <div id="roster" class="player-grid"></div>
+
+      <h3 class="sub">Leyendas</h3>
+      <div id="legends" class="legend-grid"></div>
+    </section>
+
+    <!-- EXTRAS -->
+    <section id="extras" class="view">
+      <h2 class="section-title">Récords históricos</h2>
+      <div id="records" class="records"></div>
+
+      <h2 class="section-title">Trivia NBA</h2>
+      <div id="quiz" class="card quiz"></div>
+    </section>
+  </main>
+
+  <!-- Modal de equipo -->
+  <dialog id="team-modal">
+    <button class="close" aria-label="Cerrar">✕</button>
+    <div id="team-modal-body"></div>
+  </dialog>
+
+  <footer class="footer">
+    <p>Proyecto de aficionado sin relación oficial con la NBA. Datos en vivo: API pública de ESPN. Logos e imágenes © sus respectivos propietarios.</p>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
