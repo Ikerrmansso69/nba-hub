@@ -72,7 +72,7 @@ button { font: inherit; color: inherit; }
 .brand-ball::before { clip-path: inset(0 48% 0 48%); border: 0; background: rgba(0,0,0,.55); }
 .brand-ball::after { transform: scaleX(.45); border-top-color: transparent; border-bottom-color: transparent; }
 
-.nav { grid-column: 2; display: flex; justify-content: center; gap: 2px; }
+.nav { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; justify-content: center; gap: 2px; white-space: nowrap; }
 .nav a {
   position: relative; padding: 8px 12px; font-size: 13.5px; font-weight: 600; color: var(--muted);
   border-radius: 8px; transition: color .2s;
@@ -564,11 +564,11 @@ dialog::backdrop { background: rgba(3,4,8,.75); backdrop-filter: blur(6px); }
 .footer .brand { justify-self: auto; }
 
 /* ---------------- Responsive ---------------- */
-@media (max-width: 1080px) {
+@media (max-width: 1200px) {
   .menu-btn { display: block; }
   .nav {
     position: absolute; top: 64px; left: 0; right: 0; height: calc(100vh - 64px); height: calc(100dvh - 64px); overflow-y: auto;
-    flex-direction: column; gap: 0; margin: 0; padding: 20px 24px; background: #07090f; z-index: 40;
+    flex-direction: column; justify-content: flex-start; gap: 0; margin: 0; padding: 20px 24px; background: #07090f; z-index: 40;
     opacity: 0; visibility: hidden; transform: translateY(-12px); transition: opacity .3s var(--ease), transform .4s var(--ease), visibility 0s .4s;
   }
   .nav.open { opacity: 1; visibility: visible; transform: none; transition: opacity .3s var(--ease), transform .4s var(--ease); }
