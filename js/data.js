@@ -188,20 +188,20 @@ const RECORDS = [
 ];
 
 const LEGENDS = [
-  { name: "Michael Jordan", pos: "Escolta", teams: "Bulls, Wizards", years: "1984-2003", rings: 6, fact: "6 Finales, 6 anillos, 6 MVP de las Finales. 10 veces máximo anotador." },
-  { name: "LeBron James", pos: "Alero", teams: "Cavaliers, Heat, Lakers", years: "2003-", rings: 4, fact: "Máximo anotador de la historia y 4 veces MVP de las Finales con 3 equipos distintos." },
-  { name: "Kareem Abdul-Jabbar", pos: "Pívot", teams: "Bucks, Lakers", years: "1969-1989", rings: 6, fact: "6 MVP de temporada, el máximo de la historia. Inventor del «skyhook»." },
-  { name: "Magic Johnson", pos: "Base", teams: "Lakers", years: "1979-1996", rings: 5, fact: "MVP de las Finales siendo rookie, jugando de pívot en el Game 6 de 1980." },
-  { name: "Larry Bird", pos: "Alero", teams: "Celtics", years: "1979-1992", rings: 3, fact: "3 MVP consecutivos (1984-86). Su rivalidad con Magic salvó a la liga." },
-  { name: "Bill Russell", pos: "Pívot", teams: "Celtics", years: "1956-1969", rings: 11, fact: "11 anillos en 13 temporadas. El trofeo de MVP de las Finales lleva su nombre." },
-  { name: "Wilt Chamberlain", pos: "Pívot", teams: "Warriors, 76ers, Lakers", years: "1959-1973", rings: 2, fact: "Promedió 50,4 puntos en la temporada 1961-62." },
-  { name: "Kobe Bryant", pos: "Escolta", teams: "Lakers", years: "1996-2016", rings: 5, fact: "20 temporadas en los Lakers. 81 puntos ante Toronto en 2006." },
-  { name: "Tim Duncan", pos: "Ala-pívot", teams: "Spurs", years: "1997-2016", rings: 5, fact: "«The Big Fundamental». Títulos en tres décadas distintas." },
-  { name: "Shaquille O'Neal", pos: "Pívot", teams: "Magic, Lakers, Heat…", years: "1992-2011", rings: 4, fact: "3 MVP de las Finales consecutivos (2000-2002)." },
-  { name: "Stephen Curry", pos: "Base", teams: "Warriors", years: "2009-", rings: 4, fact: "Revolucionó el juego con el triple; único MVP unánime de la historia (2016)." },
-  { name: "Hakeem Olajuwon", pos: "Pívot", teams: "Rockets, Raptors", years: "1984-2002", rings: 2, fact: "Máximo taponador de la historia y autor del «Dream Shake»." },
-  { name: "Dirk Nowitzki", pos: "Ala-pívot", teams: "Mavericks", years: "1998-2019", rings: 1, fact: "21 temporadas en Dallas, récord con un mismo equipo. MVP de las Finales 2011." },
-  { name: "Pau Gasol", pos: "Ala-pívot", teams: "Grizzlies, Lakers, Bulls, Spurs…", years: "2001-2019", rings: 2, fact: "Rookie del Año 2002 y bicampeón con los Lakers (2009, 2010). Su dorsal 16 está retirado en L.A." },
+  { name: "Michael Jordan", num: "23", pos: "Escolta", teams: "Bulls, Wizards", years: "1984-2003", rings: 6, fact: "6 Finales, 6 anillos, 6 MVP de las Finales. 10 veces máximo anotador." },
+  { name: "LeBron James", num: "23", pos: "Alero", teams: "Cavaliers, Heat, Lakers", years: "2003-", rings: 4, fact: "Máximo anotador de la historia y 4 veces MVP de las Finales con 3 equipos distintos." },
+  { name: "Kareem Abdul-Jabbar", num: "33", pos: "Pívot", teams: "Bucks, Lakers", years: "1969-1989", rings: 6, fact: "6 MVP de temporada, el máximo de la historia. Inventor del «skyhook»." },
+  { name: "Magic Johnson", num: "32", pos: "Base", teams: "Lakers", years: "1979-1996", rings: 5, fact: "MVP de las Finales siendo rookie, jugando de pívot en el Game 6 de 1980." },
+  { name: "Larry Bird", num: "33", pos: "Alero", teams: "Celtics", years: "1979-1992", rings: 3, fact: "3 MVP consecutivos (1984-86). Su rivalidad con Magic salvó a la liga." },
+  { name: "Bill Russell", num: "6", pos: "Pívot", teams: "Celtics", years: "1956-1969", rings: 11, fact: "11 anillos en 13 temporadas. El trofeo de MVP de las Finales lleva su nombre." },
+  { name: "Wilt Chamberlain", num: "13", pos: "Pívot", teams: "Warriors, 76ers, Lakers", years: "1959-1973", rings: 2, fact: "Promedió 50,4 puntos en la temporada 1961-62." },
+  { name: "Kobe Bryant", num: "24", pos: "Escolta", teams: "Lakers", years: "1996-2016", rings: 5, fact: "20 temporadas en los Lakers. 81 puntos ante Toronto en 2006." },
+  { name: "Tim Duncan", num: "21", pos: "Ala-pívot", teams: "Spurs", years: "1997-2016", rings: 5, fact: "«The Big Fundamental». Títulos en tres décadas distintas." },
+  { name: "Shaquille O'Neal", num: "34", pos: "Pívot", teams: "Magic, Lakers, Heat…", years: "1992-2011", rings: 4, fact: "3 MVP de las Finales consecutivos (2000-2002)." },
+  { name: "Stephen Curry", num: "30", pos: "Base", teams: "Warriors", years: "2009-", rings: 4, fact: "Revolucionó el juego con el triple; único MVP unánime de la historia (2016)." },
+  { name: "Hakeem Olajuwon", num: "34", pos: "Pívot", teams: "Rockets, Raptors", years: "1984-2002", rings: 2, fact: "Máximo taponador de la historia y autor del «Dream Shake»." },
+  { name: "Dirk Nowitzki", num: "41", pos: "Ala-pívot", teams: "Mavericks", years: "1998-2019", rings: 1, fact: "21 temporadas en Dallas, récord con un mismo equipo. MVP de las Finales 2011." },
+  { name: "Pau Gasol", num: "16", pos: "Ala-pívot", teams: "Grizzlies, Lakers, Bulls, Spurs…", years: "2001-2019", rings: 2, fact: "Rookie del Año 2002 y bicampeón con los Lakers (2009, 2010). Su dorsal 16 está retirado en L.A." },
 ];
 
 const TRIVIA = [

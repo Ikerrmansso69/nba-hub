@@ -5,16 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NBA Hub</title>
   <meta name="description" content="Próximos partidos, temporada regular, NBA Cup, campeones, historia, equipos y jugadores de la NBA." />
+  <meta name="theme-color" content="#07090f" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏀</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <div class="grain" aria-hidden="true"></div>
+
   <header class="topbar">
-    <a href="#inicio" class="brand"><span class="ball">🏀</span> NBA<span>HUB</span></a>
-    <button class="menu-btn" aria-label="Abrir menú" aria-expanded="false">☰</button>
-    <nav class="nav">
+    <a href="#inicio" class="brand" aria-label="NBA Hub, inicio">
+      <span class="brand-ball" aria-hidden="true"></span>
+      <span>NBA<b>HUB</b></span>
+    </a>
+    <nav class="nav" aria-label="Secciones">
       <a href="#inicio">Inicio</a>
       <a href="#calendario">Partidos</a>
       <a href="#clasificacion">Clasificación</a>
@@ -25,134 +31,266 @@
       <a href="#jugadores">Jugadores</a>
       <a href="#extras">Récords y Trivia</a>
     </nav>
+    <button class="menu-btn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span><span></span></button>
   </header>
 
+  <div class="ticker" aria-label="Últimas noticias">
+    <span class="ticker-label">EN DIRECTO</span>
+    <div class="ticker-track"><div class="ticker-move" id="ticker"></div></div>
+  </div>
+
   <main>
-    <!-- INICIO -->
+    <!-- ================= INICIO ================= -->
     <section id="inicio" class="view">
       <div class="hero">
-        <div>
-          <p class="eyebrow">Temporada 2026-27</p>
-          <h1>Todo sobre la NBA,<br />en un solo sitio.</h1>
-          <p class="lead">Próximos partidos, resultados, clasificación, NBA Cup, campeones históricos, equipos y jugadores.</p>
-          <div class="countdown" id="countdown"></div>
-        </div>
-        <div class="hero-champ">
-          <img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="New York Knicks" />
-          <div>
-            <small>Campeón vigente</small>
-            <strong>New York Knicks</strong>
-            <span>Finales 2026 · 4-1 vs Spurs · MVP: Jalen Brunson</span>
+        <svg class="court" viewBox="0 0 940 500" aria-hidden="true">
+          <rect x="10" y="10" width="920" height="480" />
+          <line x1="470" y1="10" x2="470" y2="490" />
+          <circle cx="470" cy="250" r="60" />
+          <circle cx="470" cy="250" r="20" />
+          <rect x="10" y="170" width="190" height="160" />
+          <rect x="740" y="170" width="190" height="160" />
+          <path d="M200 190 a60 60 0 0 1 0 120" />
+          <path d="M740 190 a60 60 0 0 0 0 120" />
+          <path d="M10 40 H150 A237 237 0 0 1 150 460 H10" />
+          <path d="M930 40 H790 A237 237 0 0 0 790 460 H930" />
+        </svg>
+        <div class="hero-glow" aria-hidden="true"></div>
+
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="dot"></span> Temporada 2026-27 · 81ª edición</p>
+          <h1>
+            <span class="line">El mejor</span>
+            <span class="line outline">baloncesto</span>
+            <span class="line">vuelve.</span>
+          </h1>
+          <p class="lead">Partidos, resultados, clasificación, NBA Cup, 80 años de historia y los 30 equipos. Todo en un solo sitio.</p>
+          <div class="cta">
+            <a href="#calendario" class="btn primary">Ver partidos →</a>
+            <a href="#equipos" class="btn">Explorar equipos</a>
           </div>
         </div>
+
+        <aside class="hero-side">
+          <div class="scoreboard" id="countdown" aria-live="polite"></div>
+          <div class="champ-card">
+            <div class="champ-logo"><img src="https://a.espncdn.com/i/teamlogos/nba/500/ny.png" alt="New York Knicks" /></div>
+            <div class="champ-text">
+              <small>Campeón vigente</small>
+              <strong>New York Knicks</strong>
+              <span>Finales 2026 · 4-1 a los Spurs</span>
+              <span>MVP · Jalen Brunson</span>
+            </div>
+          </div>
+        </aside>
       </div>
 
-      <h2 class="section-title">Próximos partidos</h2>
-      <div id="upcoming" class="games"></div>
+      <div class="stats-strip reveal">
+        <div><b data-count="81">81</b><span>temporadas</span></div>
+        <div><b data-count="30">30</b><span>equipos</span></div>
+        <div><b data-count="80">80</b><span>Finales disputadas</span></div>
+        <div><b data-count="1230">1230</b><span>partidos de temporada regular</span></div>
+      </div>
+
+      <div class="section-head reveal">
+        <div><p class="kicker">Calendario</p><h2>Próximos partidos</h2></div>
+        <a href="#calendario" class="link">Calendario completo →</a>
+      </div>
+      <div id="upcoming" class="rail"></div>
+
+      <div class="section-head reveal">
+        <div><p class="kicker">Explora</p><h2>Todo NBA Hub</h2></div>
+      </div>
+      <div class="bento">
+        <a href="#nbacup" class="tile tile-cup reveal">
+          <span class="tile-k">Torneo de temporada</span>
+          <strong>Emirates NBA Cup</strong>
+          <p>Formato, calendario 2026 y todas las finales.</p>
+          <span class="tile-big">2026</span>
+        </a>
+        <a href="#campeones" class="tile tile-champs reveal">
+          <span class="tile-k">Desde 1947</span>
+          <strong>Campeones</strong>
+          <p>Las banderolas de todas las franquicias campeonas.</p>
+          <span class="tile-big">80</span>
+        </a>
+        <a href="#equipos" class="tile tile-teams reveal">
+          <span class="tile-k">30 franquicias</span>
+          <strong>Equipos</strong>
+          <div class="logo-wall" id="logo-wall"></div>
+        </a>
+        <a href="#historia" class="tile tile-history reveal">
+          <span class="tile-k">1891 → 2026</span>
+          <strong>Historia</strong>
+          <p>De las cestas de melocotones al anillo de los Knicks.</p>
+        </a>
+        <a href="#jugadores" class="tile tile-players reveal">
+          <span class="tile-k">En vivo</span>
+          <strong>Jugadores</strong>
+          <p>Plantillas actuales y leyendas.</p>
+        </a>
+        <a href="#extras" class="tile tile-quiz reveal">
+          <span class="tile-k">Reloj de 24 s</span>
+          <strong>Trivia</strong>
+          <p>¿Cuánto sabes de la NBA?</p>
+          <span class="tile-big mono">24</span>
+        </a>
+      </div>
     </section>
 
-    <!-- CALENDARIO / TEMPORADA REGULAR -->
+    <!-- ================= CALENDARIO ================= -->
     <section id="calendario" class="view">
-      <h2 class="section-title">Partidos de temporada regular</h2>
-      <div class="toolbar">
-        <button class="btn" data-day="-1">◀ Día anterior</button>
-        <input type="date" id="day-picker" />
-        <button class="btn" data-day="1">Día siguiente ▶</button>
-        <button class="btn ghost" data-day="0">Hoy</button>
+      <div class="page-hero">
+        <p class="kicker">Temporada regular 2026-27</p>
+        <h2 class="page-title">Partidos</h2>
+        <p class="muted">Resultados y calendario día a día. Horas en tu zona horaria.</p>
+      </div>
+      <div class="week">
+        <button class="week-arrow" data-shift="-7" aria-label="Semana anterior">‹</button>
+        <div class="week-days" id="week-days"></div>
+        <button class="week-arrow" data-shift="7" aria-label="Semana siguiente">›</button>
+        <label class="date-pick" title="Elegir fecha">
+          <input type="date" id="day-picker" aria-label="Elegir fecha" />
+        </label>
       </div>
       <div id="day-games" class="games"></div>
     </section>
 
-    <!-- CLASIFICACIÓN -->
+    <!-- ================= CLASIFICACIÓN ================= -->
     <section id="clasificacion" class="view">
-      <h2 class="section-title">Clasificación</h2>
-      <p class="muted">Del 1º al 6º, playoffs directos · del 7º al 10º, play-in.</p>
+      <div class="page-hero">
+        <p class="kicker">En vivo</p>
+        <h2 class="page-title">Clasificación</h2>
+        <div class="legend-chips"><span class="lg po">1-6 · Playoffs</span><span class="lg pi">7-10 · Play-in</span></div>
+      </div>
       <div id="standings" class="standings"></div>
     </section>
 
-    <!-- NBA CUP -->
+    <!-- ================= NBA CUP ================= -->
     <section id="nbacup" class="view">
-      <h2 class="section-title">Emirates NBA Cup</h2>
-      <div class="cup-intro card">
-        <p>La <strong>NBA Cup</strong> es el torneo de temporada que se disputa desde 2023. Los 30 equipos se reparten en
-          <strong>6 grupos de 5</strong> (3 por conferencia). Pasan a cuartos los 6 líderes de grupo y los
-          2 mejores segundos (uno por conferencia). Semifinales y final se juegan a partido único. Todos los partidos,
-          salvo la final, cuentan para la temporada regular.</p>
+      <div class="cup-hero">
+        <div>
+          <p class="kicker gold">Torneo de temporada · 4ª edición</p>
+          <h2 class="page-title">Emirates<br />NBA Cup</h2>
+          <p class="lead">30 equipos, 6 grupos y un trofeo. Todos los partidos salvo la final cuentan para la temporada regular.</p>
+        </div>
+        <svg class="cup-trophy" viewBox="0 0 120 160" aria-hidden="true">
+          <defs><linearGradient id="gold" x1="0" x2="1"><stop offset="0" stop-color="#b8892b"/><stop offset=".5" stop-color="#ffe7a3"/><stop offset="1" stop-color="#a87a22"/></linearGradient></defs>
+          <path d="M20 10h80v20c0 30-18 52-40 56-22-4-40-26-40-56z" fill="url(#gold)"/>
+          <path d="M20 18H6c0 22 10 34 20 36M100 18h14c0 22-10 34-20 36" fill="none" stroke="url(#gold)" stroke-width="6"/>
+          <rect x="52" y="86" width="16" height="36" fill="url(#gold)"/>
+          <rect x="30" y="122" width="60" height="12" rx="2" fill="url(#gold)"/>
+          <rect x="22" y="134" width="76" height="18" rx="3" fill="#2a2f3d"/>
+        </svg>
       </div>
-      <h3 class="sub">Calendario 2026</h3>
-      <div id="cup-dates" class="timeline-row"></div>
-      <h3 class="sub">Finales de la NBA Cup</h3>
-      <div id="cup-finals" class="cup-grid"></div>
-      <h3 class="sub">Partidos de la Copa (en vivo)</h3>
+
+      <div class="steps reveal">
+        <div class="step"><b>01</b><strong>Fase de grupos</strong><span>6 grupos de 5 · 4 partidos por equipo</span></div>
+        <div class="step"><b>02</b><strong>Cuartos</strong><span>6 líderes + 2 mejores segundos</span></div>
+        <div class="step"><b>03</b><strong>Semifinales</strong><span>Partido único</span></div>
+        <div class="step"><b>04</b><strong>Final</strong><span>El campeón levanta la Copa</span></div>
+      </div>
+
+      <div class="section-head"><div><p class="kicker">Fechas clave</p><h2>Calendario 2026</h2></div></div>
+      <div id="cup-dates" class="cup-dates"></div>
+
+      <div class="section-head"><div><p class="kicker">Palmarés</p><h2>Finales de la Copa</h2></div></div>
+      <div id="cup-finals" class="tickets"></div>
+
+      <div class="section-head"><div><p class="kicker">En vivo</p><h2>Partidos de la Copa</h2></div></div>
       <div id="cup-games" class="games"></div>
     </section>
 
-    <!-- CAMPEONES -->
+    <!-- ================= CAMPEONES ================= -->
     <section id="campeones" class="view">
-      <h2 class="section-title">Campeones de la NBA</h2>
-      <div class="toolbar">
-        <input type="search" id="champ-search" placeholder="Buscar equipo, jugador o año…" />
-        <select id="champ-decade"></select>
+      <div class="page-hero">
+        <p class="kicker">1947 — 2026</p>
+        <h2 class="page-title">Campeones</h2>
+        <p class="muted">Las banderolas que cuelgan del techo de cada pabellón.</p>
       </div>
-      <div id="titles-chart" class="titles-chart"></div>
+      <div class="rafters" id="rafters"></div>
+
+      <div class="section-head"><div><p class="kicker">Todas las Finales</p><h2>Historial completo</h2></div></div>
+      <div class="toolbar">
+        <div class="search"><input type="search" id="champ-search" placeholder="Busca un equipo, un MVP o un año…" /></div>
+        <select id="champ-decade" aria-label="Filtrar por década"></select>
+      </div>
       <div class="table-wrap">
         <table class="table" id="finals-table">
-          <thead><tr><th>Año</th><th>Campeón</th><th>Resultado</th><th>Subcampeón</th><th>MVP de las Finales</th></tr></thead>
+          <thead><tr><th>Año</th><th>Campeón</th><th>Serie</th><th>Subcampeón</th><th>MVP de las Finales</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
     </section>
 
-    <!-- HISTORIA -->
+    <!-- ================= HISTORIA ================= -->
     <section id="historia" class="view">
-      <h2 class="section-title">Historia de la NBA</h2>
-      <div id="timeline" class="timeline"></div>
+      <div class="page-hero">
+        <p class="kicker">Línea temporal</p>
+        <h2 class="page-title">Historia</h2>
+        <p class="muted">Desliza para recorrer más de un siglo de baloncesto.</p>
+      </div>
+      <div class="htl-wrap">
+        <button class="htl-arrow left" aria-label="Anterior">‹</button>
+        <div class="htl" id="timeline"></div>
+        <button class="htl-arrow right" aria-label="Siguiente">›</button>
+      </div>
+      <div class="htl-progress"><span id="htl-bar"></span></div>
     </section>
 
-    <!-- EQUIPOS -->
+    <!-- ================= EQUIPOS ================= -->
     <section id="equipos" class="view">
-      <h2 class="section-title">Equipos</h2>
+      <div class="page-hero">
+        <p class="kicker">30 franquicias</p>
+        <h2 class="page-title">Equipos</h2>
+      </div>
       <div class="toolbar">
-        <div class="chips" id="team-filter">
-          <button class="chip active" data-conf="all">Todos</button>
-          <button class="chip" data-conf="Este">Este</button>
-          <button class="chip" data-conf="Oeste">Oeste</button>
+        <div class="seg" id="team-filter" role="tablist">
+          <button class="active" data-conf="all">Todos</button>
+          <button data-conf="Este">Este</button>
+          <button data-conf="Oeste">Oeste</button>
         </div>
       </div>
       <div id="teams" class="team-grid"></div>
     </section>
 
-    <!-- JUGADORES -->
+    <!-- ================= JUGADORES ================= -->
     <section id="jugadores" class="view">
-      <h2 class="section-title">Jugadores</h2>
-      <h3 class="sub">Plantillas actuales</h3>
-      <div class="toolbar">
-        <select id="roster-team"></select>
-        <input type="search" id="roster-search" placeholder="Filtrar por nombre o posición…" />
+      <div class="page-hero">
+        <p class="kicker">Plantillas en vivo</p>
+        <h2 class="page-title">Jugadores</h2>
       </div>
+      <div class="team-picker" id="team-picker"></div>
+      <div class="toolbar">
+        <div class="search"><input type="search" id="roster-search" placeholder="Filtra por nombre o posición…" /></div>
+      </div>
+      <div class="roster-head" id="roster-head"></div>
       <div id="roster" class="player-grid"></div>
 
-      <h3 class="sub">Leyendas</h3>
+      <div class="section-head"><div><p class="kicker">Hall of Fame</p><h2>Leyendas</h2></div></div>
       <div id="legends" class="legend-grid"></div>
     </section>
 
-    <!-- EXTRAS -->
+    <!-- ================= EXTRAS ================= -->
     <section id="extras" class="view">
-      <h2 class="section-title">Récords históricos</h2>
+      <div class="page-hero">
+        <p class="kicker">Libro de récords</p>
+        <h2 class="page-title">Récords</h2>
+      </div>
       <div id="records" class="records"></div>
 
-      <h2 class="section-title">Trivia NBA</h2>
-      <div id="quiz" class="card quiz"></div>
+      <div class="section-head"><div><p class="kicker">Juego</p><h2>Trivia contra el reloj</h2></div></div>
+      <div id="quiz" class="quiz"></div>
     </section>
   </main>
 
-  <!-- Modal de equipo -->
   <dialog id="team-modal">
     <button class="close" aria-label="Cerrar">✕</button>
     <div id="team-modal-body"></div>
   </dialog>
 
   <footer class="footer">
+    <div class="brand"><span class="brand-ball" aria-hidden="true"></span><span>NBA<b>HUB</b></span></div>
     <p>Proyecto de aficionado sin relación oficial con la NBA. Datos en vivo: API pública de ESPN. Logos e imágenes © sus respectivos propietarios.</p>
   </footer>
 
