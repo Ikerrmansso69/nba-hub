@@ -25,6 +25,9 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 100px; -webkit-text-size-adjust: 100%; }
+/* Barras de desplazamiento ocultas (el scroll sigue funcionando) */
+html, body, * { scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar, *::-webkit-scrollbar { display: none; width: 0; height: 0; }
 body {
   margin: 0;
   font-family: "Inter", system-ui, sans-serif;
@@ -206,7 +209,7 @@ main { max-width: 1240px; margin: 0 auto; padding: 0 24px 80px; }
 .stats-strip span { color: var(--muted); font-size: 13px; }
 
 /* ---------------- Tarjetas de partido ---------------- */
-.rail { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; }
+.rail { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 12px; }
 .rail > * { scroll-snap-align: start; }
 .games { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
 .rail > p, .games > p { grid-column: 1 / -1; }
@@ -469,7 +472,7 @@ dialog::backdrop { background: rgba(3,4,8,.75); backdrop-filter: blur(6px); }
 .modal-body h3 { margin: 28px 0 14px; font-family: var(--display); font-weight: 400; font-size: 26px; text-transform: uppercase; }
 
 /* ---------------- Jugadores ---------------- */
-.team-picker { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 14px; margin-bottom: 8px; scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; }
+.team-picker { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 14px; margin-bottom: 8px; }
 .team-picker button { flex-shrink: 0; width: 58px; height: 58px; display: grid; place-items: center; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; transition: .2s var(--ease); }
 .team-picker button img { width: 36px; height: 36px; object-fit: contain; filter: grayscale(1) opacity(.6); transition: .2s; }
 .team-picker button:hover img { filter: none; }
