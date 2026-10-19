@@ -2,15 +2,44 @@
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba";
 const ESPN_V2 = "https://site.api.espn.com/apis/v2/sports/basketball/nba";
 
-const cache = new Map();
+// Copia de respaldo que guarda cada 10 minutos la tarea automática de GitHub (rama "data")
+const SNAP = "https://raw.githubusercontent.com/Ikerrmansso69/nba-hub/data/";
 
-// fresh = true salta la caché (datos en directo: marcadores, noticias, lesiones)
-async function getJSON(url, fresh = false) {
-  if (!fresh && cache.has(url)) return cache.get(url);
-  const res = await fetch(url, fresh ? { cache: "no-store" } : undefined);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  cache.set(url, data);
+const cache = new Map();
+let espnDownUntil = 0; // si ESPN falla, se usa la copia durante 5 minutos sin volver a intentarlo
+
+async function fetchJSON(url, opts = {}, timeout = 8000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const res = await fetch(url, { ...opts, signal: ctrl.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(t);
+  }
+}
+
+// fresh = true salta la caché (datos en directo) · backup = fichero de la copia de respaldo
+async function getJSON(url, fresh = false, backup = null) {
+  const key = url;
+  if (!fresh && cache.has(key)) return cache.get(key);
+  let data;
+  if (Date.now() > espnDownUntil || !backup) {
+    try {
+      data = await fetchJSON(url, fresh ? { cache: "no-store" } : {});
+      Api.setSource("espn");
+    } catch (e) {
+      if (!backup) throw e;
+      espnDownUntil = Date.now() + 5 * 60000;
+    }
+  }
+  if (data === undefined) {
+    data = await fetchJSON(`${SNAP}${backup}?t=${Math.floor(Date.now() / 60000)}`);
+    data.__copia = true;
+    Api.setSource("copia");
+  }
+  cache.set(key, data);
   return data;
 }
 
@@ -50,14 +79,31 @@ function parseEvent(ev) {
 }
 
 const Api = {
+  source: null,
+  setSource(src) {
+    if (this.source === src) return;
+    this.source = src;
+    document.dispatchEvent(new CustomEvent("datasource", { detail: src }));
+  },
+
   async scoreboard(from, to = from, fresh = false) {
     const range = ymd(from) === ymd(to) ? ymd(from) : `${ymd(from)}-${ymd(to)}`;
-    const data = await getJSON(`${ESPN}/scoreboard?dates=${range}&limit=200`, fresh);
-    return (data.events ?? []).map(parseEvent).sort((a, b) => a.date - b.date);
+    const data = await getJSON(`${ESPN}/scoreboard?dates=${range}&limit=200`, fresh, "scoreboard.json");
+    // La copia cubre varios días: nos quedamos con los del rango pedido (por fecha de EE. UU., como ESPN)
+    const etDay = (d) => new Date(+d - 5 * 3600e3).toISOString().slice(0, 10).replace(/-/g, "");
+    const lo = ymd(from), hi = ymd(to);
+    return (data.events ?? [])
+      .map(parseEvent)
+      .filter((g) => !data.__copia || (etDay(g.date) >= lo && etDay(g.date) <= hi))
+      .sort((a, b) => a.date - b.date);
+  },
+
+  async meta() {
+    return fetchJSON(`${SNAP}meta.json?t=${Math.floor(Date.now() / 60000)}`);
   },
 
   async standings() {
-    const data = await getJSON(`${ESPN_V2}/standings`);
+    const data = await getJSON(`${ESPN_V2}/standings`, false, "standings.json");
     return (data.children ?? []).map((conf) => ({
       name: conf.name,
       teams: (conf.standings?.entries ?? [])
@@ -82,7 +128,7 @@ const Api = {
 
   // Ficha completa de un partido: box score, jugada a jugada, probabilidad, lesiones…
   summary(eventId, fresh = true) {
-    return getJSON(`${ESPN}/summary?event=${encodeURIComponent(eventId)}`, fresh);
+    return getJSON(`${ESPN}/summary?event=${encodeURIComponent(eventId)}`, fresh, `summary-${encodeURIComponent(eventId)}.json`);
   },
 
   async teamSchedule(id, seasontype) {
@@ -92,7 +138,7 @@ const Api = {
   },
 
   async news() {
-    const data = await getJSON(`${ESPN}/news?limit=50`, true);
+    const data = await getJSON(`${ESPN}/news?limit=50`, true, "news.json");
     return (data.articles ?? []).map((a) => ({
       id: String(a.id ?? a.dataSourceIdentifier ?? a.headline),
       headline: a.headline ?? "",
@@ -108,7 +154,7 @@ const Api = {
   },
 
   async injuries() {
-    const data = await getJSON(`${ESPN}/injuries`, true);
+    const data = await getJSON(`${ESPN}/injuries`, true, "injuries.json");
     return (data.injuries ?? []).map((t) => ({
       teamId: String(t.id ?? t.team?.id ?? ""),
       team: t.displayName ?? t.team?.displayName ?? "",
@@ -126,7 +172,7 @@ const Api = {
   },
 
   async transactions() {
-    const data = await getJSON(`${ESPN}/transactions`, true);
+    const data = await getJSON(`${ESPN}/transactions`, true, "transactions.json");
     return (data.transactions ?? []).map((t) => ({
       date: new Date(t.date),
       text: t.description ?? "",
@@ -142,7 +188,7 @@ const Api = {
   },
 
   async roster(id) {
-    const data = await getJSON(`${ESPN}/teams/${id}/roster`);
+    const data = await getJSON(`${ESPN}/teams/${id}/roster`, false, `roster-${id}.json`);
     // La respuesta puede venir plana o agrupada por posiciones
     const raw = data.athletes ?? [];
     const list = raw.flatMap((a) => (a.items ? a.items : [a]));
