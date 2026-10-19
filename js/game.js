@@ -160,13 +160,14 @@ const Game = {
       hasBox && ["box", "Jugadores"],
       hasPlays && ["pbp", "Jugada a jugada"],
       hasPlays && ["shots", "Mapa de tiro"],
+      d.videos?.length && ["videos", "Vídeos"],
       ["injuries", "Bajas"],
     ].filter(Boolean);
   },
 
   renderPane() {
     const el = $("#m-pane");
-    const fn = { resumen: this.paneSummary, stats: this.paneStats, lineups: this.paneLineups, box: this.paneBox, pbp: this.panePbp, shots: this.paneShots, injuries: this.paneInjuries }[this.tab];
+    const fn = { videos: this.paneVideos, resumen: this.paneSummary, stats: this.paneStats, lineups: this.paneLineups, box: this.paneBox, pbp: this.panePbp, shots: this.paneShots, injuries: this.paneInjuries }[this.tab];
     el.innerHTML = "";
     fn.call(this, el);
   },
@@ -208,6 +209,49 @@ const Game = {
         </div>`);
     }
 
+    // Previa: últimos 5 partidos de cada equipo
+    const l5 = d.lastFiveGames ?? [];
+    if (l5.some((t) => t.events?.length)) {
+      const teamRow = (t) => {
+        const side = this.sideById(String(t.team?.id));
+        const evs = (t.events ?? []).slice(0, 5);
+        const wins = evs.filter((e) => e.gameResult === "W").length;
+        return `<div class="l5-team">
+          <h4><img src="${esc(side.logo)}" alt="" />${esc(side.short)}<span>${wins}-${evs.length - wins}</span></h4>
+          <div class="l5-games">${evs.map((e) => `
+            <a class="l5 ${e.gameResult === "W" ? "w" : e.gameResult === "L" ? "l" : ""}" href="#partido/${esc(e.id)}" title="${esc(new Date(e.gameDate).toLocaleDateString("es-ES", { day: "numeric", month: "short" }))}">
+              <b>${e.gameResult === "W" ? "V" : e.gameResult === "L" ? "D" : "–"}</b>
+              <img src="${esc(safeUrl(e.opponentLogo) || LOGO((e.opponent?.abbreviation ?? "").toLowerCase()))}" alt="" />
+              <small>${esc(e.atVs ?? "")} ${esc(e.opponent?.abbreviation ?? "")}</small>
+              <span>${esc(e.score ?? "")}</span>
+            </a>`).join("")}</div>
+        </div>`;
+      };
+      parts.push(`<div class="card-block"><h3>Últimos 5 partidos</h3>${l5.map(teamRow).join("")}</div>`);
+    }
+
+    // Enfrentamientos de la temporada
+    const ser = (d.seasonseries ?? []).find((x) => x.type === "season") ?? d.seasonseries?.[0];
+    if (ser?.events?.length) {
+      const evRow = (e) => {
+        const c = (ha) => e.competitors?.find((x) => x.homeAway === ha) ?? {};
+        const a = c("away"), h = c("home");
+        const done = e.statusType?.completed;
+        const date = new Date(e.date).toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+        const logo = (x) => esc(safeUrl(x.team?.logo) || LOGO((x.team?.abbreviation ?? "").toLowerCase()));
+        return `<a class="series-row ${String(e.id) === String(this.id) ? "current" : ""}" href="#partido/${esc(e.id)}">
+          <small>${date}</small>
+          <span><img src="${logo(a)}" alt="" />${esc(a.team?.abbreviation ?? "")}</span>
+          <b>${done ? `${esc(a.score)} - ${esc(h.score)}` : String(e.id) === String(this.id) ? "Este partido" : "Pendiente"}</b>
+          <span>${esc(h.team?.abbreviation ?? "")}<img src="${logo(h)}" alt="" /></span>
+        </a>`;
+      };
+      const score = (ser.seriesScore ?? "").replace(/-/, " - ");
+      parts.push(`<div class="card-block"><h3>Enfrentamientos de la temporada</h3>
+        <p class="series-score">${ser.completed ? "Serie terminada" : "Serie"} · <b>${esc(score || "0 - 0")}</b> · ${esc(ser.totalCompetitions ?? ser.events.length)} partidos</p>
+        ${ser.events.map(evRow).join("")}</div>`);
+    }
+
     // Líderes
     const leaders = d.leaders ?? [];
     if (leaders.some((l) => l.leaders?.length)) {
@@ -247,6 +291,11 @@ const Game = {
   sideById(id) {
     const a = this.side("away");
     return a.id === id ? a : this.side("home");
+  },
+
+  // ----- Vídeos -----
+  paneVideos(el) {
+    el.innerHTML = `<div class="videos-grid">${(this.data.videos ?? []).map((v) => Videos.card(v)).join("")}</div>`;
   },
 
   // ----- Estadísticas de equipo -----

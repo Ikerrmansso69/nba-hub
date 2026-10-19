@@ -2,7 +2,7 @@
 const ESPN = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba";
 const ESPN_V2 = "https://site.api.espn.com/apis/v2/sports/basketball/nba";
 
-// Copia de respaldo que guarda cada 10 minutos la tarea automática de GitHub (rama "data")
+// Copia de respaldo que guarda cada 5 minutos la tarea automática de GitHub (rama "data")
 const SNAP = "https://raw.githubusercontent.com/Ikerrmansso69/nba-hub/data/";
 
 const cache = new Map();

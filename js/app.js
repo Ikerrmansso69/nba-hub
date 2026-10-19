@@ -132,6 +132,7 @@ async function renderUpcoming(silent = false) {
     $("#fb-note")?.remove();
     // En directo primero, luego los próximos
     watchFavGames(all);
+    Videos.loadHome(all);
     upcomingAll = all;
     renderMyTeams();
     const games = favFirst(all.filter((g) => g.state !== "post").sort((a, b) => (b.state === "in") - (a.state === "in") || a.date - b.date));
@@ -752,6 +753,7 @@ function route() {
     Game.open(param);
   } else Game.stop();
   if (view === "jugador" && param) Players.open(param);
+  if (view === "extras") Porra.open();
   if (view === "noticias") News.visited();
   prevView = view;
   $(".nav").classList.remove("open");
@@ -830,6 +832,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }, true);
   document.addEventListener("favs", () => { renderMyTeams(); if (dayGames.length) paintDay(); News.renderList?.(); });
   window.addEventListener("hashchange", route);
+  Videos.init();
   News.init();
   route();
 

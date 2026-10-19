@@ -52,7 +52,19 @@ report.games = allEvents.length;
 
 report.standings = await save("standings.json", await get(`${ESPN_V2}/standings?seasontype=2`));
 report.news = await save("news.json", await get(`${ESPN}/news?limit=50`));
-report.injuries = await save("injuries.json", await get(`${ESPN}/injuries`));
+// Parte de lesiones reducido a lo que usa la web (el original pesa ~1 MB)
+const inj = await get(`${ESPN}/injuries`);
+report.injuries = await save("injuries.json", inj && {
+  injuries: (inj.injuries ?? []).map((t) => ({
+    id: t.id, displayName: t.displayName,
+    injuries: (t.injuries ?? []).map((i) => ({
+      status: i.status, shortComment: i.shortComment, date: i.date,
+      type: i.type && { description: i.type.description },
+      details: i.details && { type: i.details.type, detail: i.details.detail, side: i.details.side, returnDate: i.details.returnDate },
+      athlete: i.athlete && { displayName: i.athlete.displayName, headshot: i.athlete.headshot && { href: i.athlete.headshot.href }, position: i.athlete.position && { abbreviation: i.athlete.position.abbreviation } },
+    })),
+  })),
+});
 report.transactions = await save("transactions.json", await get(`${ESPN}/transactions`));
 
 // Fichas de los partidos de hoy y de ayer (en directo o recién terminados) y de los de mañana

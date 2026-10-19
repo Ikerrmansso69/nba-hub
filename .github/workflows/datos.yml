@@ -1,11 +1,14 @@
 name: Copia de datos de ESPN
 
-# Cada 10 minutos guarda una copia de partidos, clasificación, noticias, lesiones,
-# fichas de partido y plantillas en la rama "data". La web la usa si no puede
-# leer la API de ESPN directamente desde el navegador.
+# Guarda una copia de partidos, clasificación, noticias, lesiones, fichas de partido,
+# plantillas y estadísticas en la rama "data". La web la usa si no puede leer la API
+# de ESPN directamente desde el navegador.
+#
+# Cada ejecución actualiza la copia cada 5 minutos durante ~5 horas y, al terminar,
+# se relanza sola. La tarea programada hace de "vigilante" por si la cadena se corta.
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "17 */2 * * *"
   workflow_dispatch:
   push:
     branches: [main]
@@ -13,15 +16,16 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: datos
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   snapshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 340
     steps:
       - uses: actions/checkout@v4
 
@@ -29,6 +33,7 @@ jobs:
         run: |
           if git fetch --depth=1 origin data; then
             git worktree add snap FETCH_HEAD
+            rm -f snap/.git
           else
             mkdir snap
           fi
@@ -37,23 +42,30 @@ jobs:
         with:
           node-version: 20
 
-      - name: Descargar datos de ESPN
-        run: node scripts/snapshot.mjs snap
-
-      - name: Comprobar si ESPN permite peticiones desde la web (diagnóstico)
-        continue-on-error: true
+      - name: Actualizar la copia cada 5 minutos
+        env:
+          TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
-          curl -sSI -H "Origin: https://ikerrmansso69.github.io" \
-            "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard" \
-            | grep -iE "^HTTP|access-control" || echo "Sin cabeceras CORS"
+          for i in $(seq 1 55); do
+            echo "::group::Pasada $i · $(date -u +%T)"
+            node scripts/snapshot.mjs snap || echo "La descarga falló en esta pasada"
+            (
+              cd snap
+              rm -rf .git
+              git init -q -b data
+              git config user.name "github-actions[bot]"
+              git config user.email "41898+github-actions[bot]@users.noreply.github.com"
+              git add -A
+              git commit -qm "Datos $(date -u +%FT%TZ)"
+              git push -qf "https://x-access-token:${TOKEN}@github.com/${REPO}.git" data
+            ) || echo "No se pudo publicar en esta pasada"
+            echo "::endgroup::"
+            sleep 300
+          done
 
-      - name: Publicar en la rama data
-        run: |
-          cd snap
-          rm -rf .git
-          git init -q -b data
-          git config user.name "github-actions[bot]"
-          git config user.email "41898+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -qm "Datos $(date -u +%FT%TZ)"
-          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
+      - name: Relanzar la siguiente ejecución
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run datos.yml --ref main --repo "${{ github.repository }}"

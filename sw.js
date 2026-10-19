@@ -1,9 +1,9 @@
 // Service worker: guarda la web para que abra al instante y funcione sin conexión.
 // Los datos en directo (ESPN y la copia de respaldo) no se guardan aquí: siempre van a la red.
-const VERSION = "nbahub-v1";
+const VERSION = "nbahub-v2";
 const SHELL = [
   "./", "index.html", "css/styles.css",
-  "js/data.js", "js/api.js", "js/app.js", "js/news.js", "js/game.js", "js/players.js",
+  "js/data.js", "js/api.js", "js/app.js", "js/news.js", "js/game.js", "js/players.js", "js/videos.js", "js/porra.js",
   "manifest.webmanifest", "img/icon-192.png", "img/icon-512.png",
 ];
 

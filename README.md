@@ -33,7 +33,7 @@ Web sobre la NBA en español: próximos partidos, temporada regular, clasificaci
 
 ## Copia de respaldo de los datos
 
-La tarea de GitHub Actions `.github/workflows/datos.yml` ejecuta `scripts/snapshot.mjs` cada 10 minutos y guarda en la rama `data` una copia de calendario, clasificación, noticias, lesiones, movimientos, fichas de los partidos cercanos, plantillas y estadísticas de jugadores. Si el navegador no puede leer la API de ESPN, la web usa esa copia y lo indica con un aviso en la esquina.
+La tarea de GitHub Actions `.github/workflows/datos.yml` ejecuta `scripts/snapshot.mjs` cada 5 minutos y guarda en la rama `data` una copia de calendario, clasificación, noticias, lesiones, movimientos, fichas de los partidos cercanos, plantillas y estadísticas de jugadores. Si el navegador no puede leer la API de ESPN, la web usa esa copia y lo indica con un aviso en la esquina.
 
 ## App instalable
 
