@@ -34,13 +34,15 @@ function gameCard(g) {
       ? `<span class="live">EN VIVO</span> ${esc(g.detail)}`
       : `Final · ${fmtDate(g.date)}`;
   const tag = g.note || SEASON_LABEL[g.seasonType] || "";
+  const tagName = g.id ? "a" : "article";
+  const cta = g.id ? `<span class="g-cta">${g.state === "in" ? "Seguir en directo" : g.state === "post" ? "Ver estadísticas" : "Previa y quintetos"} →</span>` : "";
   return `
-    <article class="game" style="--ca:${colorOf(g.away.abbr)};--ch:${colorOf(g.home.abbr)}">
+    <${tagName} class="game ${g.state === "in" ? "is-live" : ""}" ${g.id ? `href="#partido/${esc(g.id)}"` : ""} style="--ca:${colorOf(g.away.abbr)};--ch:${colorOf(g.home.abbr)}">
       <div class="g-head"><span>${status}</span>${tag ? `<span class="tag">${esc(tag)}</span>` : ""}</div>
       ${side(g.away, g.away.winner)}
       ${side(g.home, g.home.winner)}
-      <div class="g-foot">${esc([g.venue, g.tv].filter(Boolean).join(" · "))}</div>
-    </article>`;
+      <div class="g-foot">${esc([g.venue, g.tv].filter(Boolean).join(" · "))}${cta}</div>
+    </${tagName}>`;
 }
 
 function fallbackGames() {
@@ -94,18 +96,21 @@ function renderCountdown() {
   if (tick()) setInterval(tick, 1000);
 }
 
-async function renderUpcoming() {
+async function renderUpcoming(silent = false) {
   const el = $("#upcoming");
-  skeleton(el, 4);
+  if (!silent) skeleton(el, 4);
   try {
     const now = new Date();
     const to = new Date(now.getTime() + 7 * 86400000);
-    const all = await Api.scoreboard(new Date(now.getTime() - 86400000), to);
+    const all = await Api.scoreboard(new Date(now.getTime() - 86400000), to, silent);
     fillTicker(all);
-    const games = all.filter((g) => g.state !== "post");
+    $("#fb-note")?.remove();
+    // En directo primero, luego los próximos
+    const games = all.filter((g) => g.state !== "post").sort((a, b) => (b.state === "in") - (a.state === "in") || a.date - b.date);
     if (!games.length) throw new Error("sin partidos");
     el.innerHTML = games.slice(0, 15).map(gameCard).join("");
   } catch {
+    if (silent) return;
     const fb = fallbackGames();
     fillTicker(fb);
     el.innerHTML = fb.map(gameCard).join("");
@@ -140,19 +145,34 @@ function renderWeek() {
   $("#day-picker").value = ymd(currentDay).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
 }
 
-async function renderDay() {
-  renderWeek();
+let dayGames = [];
+let gameFilter = "all";
+function paintDay() {
   const el = $("#day-games");
-  skeleton(el, 6);
+  const list = dayGames.filter((g) => gameFilter === "all" || g.state === gameFilter);
+  const live = dayGames.filter((g) => g.state === "in").length;
+  $('#game-filter [data-f="in"]').innerHTML = `En directo${live ? ` <span class="count">${live}</span>` : ""}`;
+  list.length ? (el.innerHTML = list.map(gameCard).join("")) : empty(el, dayGames.length ? "No hay partidos en este filtro." : "No hay partidos este día.");
+}
+
+async function renderDay(silent = false) {
+  if (!silent) { renderWeek(); skeleton($("#day-games"), 6); }
   try {
-    const games = await Api.scoreboard(currentDay);
-    games.length ? (el.innerHTML = games.map(gameCard).join("")) : empty(el, "No hay partidos este día.");
+    dayGames = await Api.scoreboard(currentDay, currentDay, silent || sameDay(currentDay, new Date()));
+    paintDay();
   } catch {
-    empty(el, "No se pudieron cargar los partidos. Inténtalo de nuevo más tarde.");
+    if (!silent) empty($("#day-games"), "No se pudieron cargar los partidos. Inténtalo de nuevo más tarde.");
   }
 }
 
 function initCalendar() {
+  $("#game-filter").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    gameFilter = b.dataset.f;
+    $$("#game-filter button").forEach((x) => x.classList.toggle("active", x === b));
+    paintDay();
+  });
   $("#week-days").addEventListener("click", (e) => {
     const b = e.target.closest(".day");
     if (!b) return;
@@ -594,11 +614,20 @@ const lazyLoaders = {
   jugadores: loadRoster,
 };
 
+let prevView = null;
 function route() {
-  const id = (location.hash || "#inicio").slice(1);
+  const hash = decodeURIComponent((location.hash || "#inicio").slice(1));
+  const [id, param] = hash.split("/");
   const view = document.getElementById(id)?.classList.contains("view") ? id : "inicio";
+  const navKey = view === "partido" ? "calendario" : view;
   $$(".view").forEach((v) => v.classList.toggle("active", v.id === view));
-  $$(".nav a").forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + view));
+  $$(".nav a").forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + navKey));
+  if (view === "partido" && param) {
+    $("#match-back").href = prevView && prevView !== "partido" ? "#" + prevView : "#calendario";
+    Game.open(param);
+  } else Game.stop();
+  if (view === "noticias") News.visited();
+  prevView = view;
   $(".nav").classList.remove("open");
   $(".menu-btn").setAttribute("aria-expanded", "false");
   document.body.style.overflow = "";
@@ -631,5 +660,14 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.style.overflow = open ? "hidden" : "";
   });
   window.addEventListener("hashchange", route);
+  News.init();
   route();
+
+  // Marcadores en directo: refresco automático cada 30 s en Inicio y Partidos
+  setInterval(() => {
+    if (document.hidden) return;
+    const v = $(".view.active")?.id;
+    if (v === "inicio") renderUpcoming(true);
+    if (v === "calendario" && (dayGames.some((g) => g.state === "in") || sameDay(currentDay, new Date()))) renderDay(true);
+  }, 30000);
 });

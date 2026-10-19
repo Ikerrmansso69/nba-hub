@@ -22,6 +22,7 @@
     </a>
     <nav class="nav" aria-label="Secciones">
       <a href="#inicio">Inicio</a>
+      <a href="#noticias">Noticias <span class="nav-badge" id="news-badge" hidden></span></a>
       <a href="#calendario">Partidos</a>
       <a href="#clasificacion">Clasificación</a>
       <a href="#nbacup">NBA Cup</a>
@@ -29,7 +30,7 @@
       <a href="#historia">Historia</a>
       <a href="#equipos">Equipos</a>
       <a href="#jugadores">Jugadores</a>
-      <a href="#extras">Récords y Trivia</a>
+      <a href="#extras">Extras</a>
     </nav>
     <button class="menu-btn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span><span></span></button>
   </header>
@@ -99,6 +100,12 @@
       <div id="upcoming" class="rail"></div>
 
       <div class="section-head reveal">
+        <div><p class="kicker"><span class="live-dot"></span> Al minuto</p><h2>Últimas noticias</h2></div>
+        <a href="#noticias" class="link">Todas las noticias →</a>
+      </div>
+      <div id="home-news" class="news-grid compact"></div>
+
+      <div class="section-head reveal">
         <div><p class="kicker">Explora</p><h2>Todo NBA Hub</h2></div>
       </div>
       <div class="bento">
@@ -153,7 +160,53 @@
           <input type="date" id="day-picker" aria-label="Elegir fecha" />
         </label>
       </div>
+      <div class="seg game-filter" id="game-filter">
+        <button class="active" data-f="all">Todos</button>
+        <button data-f="in">En directo</button>
+        <button data-f="post">Finalizados</button>
+        <button data-f="pre">Próximos</button>
+      </div>
       <div id="day-games" class="games"></div>
+    </section>
+
+    <!-- ================= PARTIDO ================= -->
+    <section id="partido" class="view">
+      <a href="#calendario" class="back" id="match-back">← Volver a partidos</a>
+      <div id="match"></div>
+    </section>
+
+    <!-- ================= NOTICIAS ================= -->
+    <section id="noticias" class="view">
+      <div class="page-hero">
+        <p class="kicker"><span class="live-dot"></span> En directo</p>
+        <h2 class="page-title">Noticias</h2>
+        <p class="muted" id="news-updated">Cargando…</p>
+        <button class="btn" id="notify-btn">🔔 Activar avisos</button>
+      </div>
+      <div class="m-tabs" id="news-tabs">
+        <button class="active" data-tab="news">Última hora</button>
+        <button data-tab="injuries">Parte de lesiones</button>
+        <button data-tab="moves">Movimientos</button>
+      </div>
+      <div class="news-pane" data-pane="news">
+        <div class="seg" id="news-filters">
+          <button class="active" data-f="all">Todas</button>
+          <button data-f="injury">Lesiones</button>
+          <button data-f="move">Fichajes</button>
+          <button data-f="game">Partidos</button>
+        </div>
+        <div id="news-list" class="news-grid"></div>
+      </div>
+      <div class="news-pane" data-pane="injuries" hidden>
+        <div class="toolbar">
+          <select id="inj-team" aria-label="Equipo"><option value="all">Todos los equipos</option></select>
+          <div class="search"><input type="search" id="inj-search" placeholder="Busca un jugador…" /></div>
+        </div>
+        <div id="inj-list" class="inj-grid"></div>
+      </div>
+      <div class="news-pane" data-pane="moves" hidden>
+        <div id="moves-list" class="moves"></div>
+      </div>
     </section>
 
     <!-- ================= CLASIFICACIÓN ================= -->
@@ -284,6 +337,8 @@
     </section>
   </main>
 
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
   <dialog id="team-modal">
     <button class="close" aria-label="Cerrar">✕</button>
     <div id="team-modal-body"></div>
@@ -297,5 +352,7 @@
   <script src="js/data.js"></script>
   <script src="js/api.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/news.js"></script>
+  <script src="js/game.js"></script>
 </body>
 </html>
