@@ -37,9 +37,18 @@ await mkdir(OUT, { recursive: true });
 const now = new Date();
 const report = {};
 
-// Calendario: desde hace 3 días hasta dentro de 10
-const scoreboard = await get(`${ESPN}/scoreboard?dates=${ymd(new Date(+now - 3 * day))}-${ymd(new Date(+now + 10 * day))}&limit=1000`);
+// Calendario: desde hace 3 días hasta dentro de 10, día a día (más fiable que un rango)
+const allEvents = [];
+let days = 0;
+for (let i = -3; i <= 10; i++) {
+  const sb = await get(`${ESPN}/scoreboard?dates=${ymd(new Date(+now + i * day))}`);
+  if (!sb) continue;
+  days++;
+  allEvents.push(...(sb.events ?? []));
+}
+const scoreboard = days ? { events: allEvents } : null;
 report.scoreboard = await save("scoreboard.json", scoreboard);
+report.games = allEvents.length;
 
 report.standings = await save("standings.json", await get(`${ESPN_V2}/standings`));
 report.news = await save("news.json", await get(`${ESPN}/news?limit=50`));
@@ -78,9 +87,27 @@ report.rosters = rosters;
 // Estadísticas de temporada de todos los jugadores (comparador y fichas): cada hora
 let statsAt = prev.statsAt;
 if (!statsAt || Date.now() - new Date(statsAt) > 3600e3) {
-  const stats = await get("https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/statistics/byathlete?region=us&lang=en&contentorigin=espn&isqualified=false&limit=700&sort=offensive.avgPoints%3Adesc");
-  if (await save("players.json", stats)) statsAt = now.toISOString();
-  report.players = Boolean(stats);
+  const stats = await get("https://site.api.espn.com/apis/common/v3/sports/basketball/nba/statistics/byathlete?region=us&lang=en&contentorigin=espn&isqualified=false&limit=700&sort=offensive.avgPoints%3Adesc");
+  // Versión reducida: el original pesa varios MB
+  const lite = stats && {
+    season: stats.requestedSeason?.displayName ?? "",
+    players: (stats.athletes ?? []).map((a) => {
+      const st = {};
+      (a.categories ?? []).forEach((c) => {
+        const names = stats.categories?.find((x) => x.name === c.name)?.names ?? [];
+        names.forEach((n, i) => (st[n] = c.values?.[i]));
+      });
+      const pick = ["gamesPlayed", "avgMinutes", "avgPoints", "avgRebounds", "avgAssists", "avgSteals", "avgBlocks", "avgTurnovers", "fieldGoalPct", "threePointFieldGoalPct", "freeThrowPct", "avgThreePointFieldGoalsMade", "doubleDouble", "tripleDouble"];
+      return {
+        id: a.athlete?.id, name: a.athlete?.displayName, short: a.athlete?.shortName,
+        team: a.athlete?.teamShortName, teamName: a.athlete?.teamName, pos: a.athlete?.position?.abbreviation, age: a.athlete?.age,
+        photo: a.athlete?.headshot?.href,
+        s: Object.fromEntries(pick.map((k) => [k, typeof st[k] === "number" ? Math.round(st[k] * 10) / 10 : st[k]])),
+      };
+    }),
+  };
+  if (await save("players.json", lite)) statsAt = now.toISOString();
+  report.players = lite?.players.length ?? 0;
 }
 
 await save("meta.json", { updated: now.toISOString(), rostersAt, statsAt, report });

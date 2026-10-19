@@ -182,6 +182,36 @@ const Api = {
     }));
   },
 
+  // Estadísticas de temporada de todos los jugadores (comparador, líderes y fichas)
+  async players() {
+    const url = "https://site.api.espn.com/apis/common/v3/sports/basketball/nba/statistics/byathlete?region=us&lang=en&contentorigin=espn&isqualified=false&limit=700&sort=offensive.avgPoints%3Adesc";
+    const data = await getJSON(url, false, "players.json");
+    if (data.players) return data; // copia de respaldo, ya reducida
+    return {
+      season: data.requestedSeason?.displayName ?? "",
+      players: (data.athletes ?? []).map((a) => {
+        const st = {};
+        (a.categories ?? []).forEach((c) => {
+          const names = data.categories?.find((x) => x.name === c.name)?.names ?? [];
+          names.forEach((n, i) => (st[n] = typeof c.values?.[i] === "number" ? Math.round(c.values[i] * 10) / 10 : c.values?.[i]));
+        });
+        return {
+          id: a.athlete?.id, name: a.athlete?.displayName, short: a.athlete?.shortName,
+          team: a.athlete?.teamShortName, teamName: a.athlete?.teamName, pos: a.athlete?.position?.abbreviation, age: a.athlete?.age,
+          photo: a.athlete?.headshot?.href, s: st,
+        };
+      }),
+    };
+  },
+
+  // Ficha y partidos de un jugador (solo en directo desde ESPN)
+  athlete(id) {
+    return getJSON(`https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${encodeURIComponent(id)}`);
+  },
+  gamelog(id) {
+    return getJSON(`https://site.web.api.espn.com/apis/common/v3/sports/basketball/nba/athletes/${encodeURIComponent(id)}/gamelog`);
+  },
+
   async team(id) {
     const data = await getJSON(`${ESPN}/teams/${id}`);
     return data.team;
