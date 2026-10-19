@@ -151,7 +151,7 @@ const Game = {
   tabs() {
     const d = this.data;
     const hasBox = d.boxscore?.players?.some((p) => p.statistics?.[0]?.athletes?.length);
-    const hasStats = d.boxscore?.teams?.some((t) => t.statistics?.length);
+    const hasStats = this.state() !== "pre" && d.boxscore?.teams?.some((t) => t.statistics?.length);
     const hasPlays = d.plays?.length;
     return [
       ["resumen", "Resumen"],
@@ -238,7 +238,8 @@ const Game = {
       gi.officials?.length && ["Árbitros", gi.officials.map((o) => o.displayName ?? o.fullName).join(", ")],
       this.comp().broadcasts?.length && ["TV", this.comp().broadcasts.map((b) => b.media?.shortName ?? b.names?.join(", ")).filter(Boolean).join(", ")],
     ].filter(Boolean);
-    if (info.length) parts.push(`<div class="card-block"><h3>Información</h3><dl class="info">${info.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>`);
+    const venueImg = safeUrl(gi.venue?.images?.[0]?.href);
+    if (info.length) parts.push(`<div class="card-block">${venueImg ? `<img class="venue-img" src="${esc(venueImg)}" alt="${esc(gi.venue?.fullName ?? "")}" loading="lazy" onerror="this.remove()" />` : ""}<h3>Información</h3><dl class="info">${info.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>`);
 
     el.innerHTML = `<div class="m-grid">${parts.join("") || `<p class="muted">Todavía no hay datos de este partido.</p>`}</div>`;
   },
@@ -282,7 +283,7 @@ const Game = {
       const athletes = s.athletes ?? [];
       const row = (a) => `<tr class="${a.starter ? "starter" : ""}">
         <td class="sticky"><span class="pl"><img src="${esc(safeUrl(a.athlete?.headshot?.href) || PLACEHOLDER)}" alt="" loading="lazy" onerror="this.src=PLACEHOLDER" />
-          <span><strong>${esc(a.athlete?.shortName ?? a.athlete?.displayName ?? "")}</strong><small>${esc(a.athlete?.position?.abbreviation ?? "")} ${a.athlete?.jersey ? "#" + esc(a.athlete.jersey) : ""}</small></span></span></td>
+          <span><a href="#jugador/${esc(a.athlete?.id ?? "")}"><strong>${esc(a.athlete?.shortName ?? a.athlete?.displayName ?? "")}</strong></a><small>${esc(a.athlete?.position?.abbreviation ?? "")} ${a.athlete?.jersey ? "#" + esc(a.athlete.jersey) : ""}</small></span></span></td>
         ${a.didNotPlay || !a.stats?.length ? `<td colspan="${cols.length}" class="muted">${esc(a.reason || "No jugó")}</td>` : a.stats.map((v) => `<td class="num">${esc(v)}</td>`).join("")}
       </tr>`;
       const starters = athletes.filter((a) => a.starter), bench = athletes.filter((a) => !a.starter);

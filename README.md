@@ -18,7 +18,11 @@ Web sobre la NBA en español: próximos partidos, temporada regular, clasificaci
 | **Historia** | Línea temporal de la liga desde 1891 hasta hoy |
 | **Equipos** | Galería con los logos de los 30 equipos; al pulsar, ficha con datos, títulos y plantilla con fotos |
 | **Jugadores** | Plantillas actuales de cada equipo (con foto, dorsal, posición, altura…) y leyendas históricas |
-| **Récords y Trivia** | Récords míticos y un quiz de preguntas NBA |
+| **Mis equipos** | Marca tus equipos con ⭐: su próximo partido, último resultado y noticias en la portada, y avisos cuando empiezan o terminan sus partidos |
+| **Fichas de jugador** | Promedios de la temporada, biografía y últimos partidos con gráfico de puntos |
+| **Comparador** | Dos jugadores cara a cara, estadística por estadística |
+| **Cuadro de playoffs** | Proyección de play-in y playoffs con la clasificación del día |
+| **Extras** | Récords míticos y un quiz de preguntas NBA con reloj de 24 segundos |
 
 ## Cómo funciona
 
@@ -26,6 +30,14 @@ Web sobre la NBA en español: próximos partidos, temporada regular, clasificaci
 - Los datos **en vivo** (calendario, resultados, clasificación, plantillas, fotos, noticias, lesiones y estadísticas de partido) vienen de la API pública de ESPN (`site.api.espn.com`). Las noticias llegan en inglés, tal como las publica ESPN.
 - Los datos **históricos** (finales, NBA Cup, historia, récords, leyendas, trivia) están en `js/data.js` y se pueden ampliar fácilmente.
 - Si la API no responde, la portada muestra los partidos de la noche inaugural como respaldo.
+
+## Copia de respaldo de los datos
+
+La tarea de GitHub Actions `.github/workflows/datos.yml` ejecuta `scripts/snapshot.mjs` cada 10 minutos y guarda en la rama `data` una copia de calendario, clasificación, noticias, lesiones, movimientos, fichas de los partidos cercanos, plantillas y estadísticas de jugadores. Si el navegador no puede leer la API de ESPN, la web usa esa copia y lo indica con un aviso en la esquina.
+
+## App instalable
+
+La web incluye `manifest.webmanifest` y un service worker (`sw.js`), así que se puede **añadir a la pantalla de inicio** del móvil (en Android/Chrome aparece el botón ⤓ en la barra superior; en iPhone, *Compartir → Añadir a pantalla de inicio*). También tiene tema claro/oscuro (botón ◐).
 
 ## Ejecutar en local
 
@@ -46,6 +58,9 @@ js/api.js       # Cliente de la API de ESPN
 js/app.js       # Lógica de la interfaz y navegación
 js/news.js      # Noticias en directo, lesiones, movimientos y avisos
 js/game.js      # Ficha de partido en directo
+js/players.js   # Fichas de jugador, comparador y líderes
+scripts/        # Copia de respaldo de los datos (GitHub Actions)
+sw.js           # Service worker (app instalable)
 ```
 
 ## Aviso

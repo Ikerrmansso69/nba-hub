@@ -103,7 +103,7 @@ const Api = {
   },
 
   async standings() {
-    const data = await getJSON(`${ESPN_V2}/standings`, false, "standings.json");
+    const data = await getJSON(`${ESPN_V2}/standings?seasontype=2`, false, "standings.json");
     return (data.children ?? []).map((conf) => ({
       name: conf.name,
       teams: (conf.standings?.entries ?? [])

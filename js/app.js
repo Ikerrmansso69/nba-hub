@@ -19,6 +19,31 @@ const skeleton = (el, n = 6, h = 168) =>
 
 const SEASON_LABEL = { 1: "Pretemporada", 2: "Temporada regular", 3: "Playoffs", 5: "Play-in" };
 
+// ---------- Mis equipos (favoritos guardados en el navegador) ----------
+const Favs = {
+  set: new Set((() => { try { return JSON.parse(localStorage.getItem("nbahub-favs") || "[]"); } catch { return []; } })()),
+  has(abbr) { return this.set.has(abbr); },
+  toggle(abbr) {
+    this.set.has(abbr) ? this.set.delete(abbr) : this.set.add(abbr);
+    try { localStorage.setItem("nbahub-favs", JSON.stringify([...this.set])); } catch {}
+    $$(`[data-fav="${abbr}"]`).forEach((b) => { b.classList.toggle("on", this.has(abbr)); b.setAttribute("aria-pressed", this.has(abbr)); });
+    toast(this.has(abbr) ? `⭐ Ahora sigues a los <strong>${esc(teamByAbbr(abbr).name)}</strong>` : `Has dejado de seguir a los ${esc(teamByAbbr(abbr).name)}`);
+    document.dispatchEvent(new Event("favs"));
+  },
+  inGame(g) { return this.has(g.away.abbr) || this.has(g.home.abbr); },
+  // Noticia relacionada con alguno de mis equipos
+  inNews(a) {
+    return [...this.set].some((abbr) => {
+      const t = teamByAbbr(abbr);
+      // Etiquetado con el equipo (solo si la noticia es de pocos equipos) o lo nombra en el titular
+      return ((a.teamIds?.length ?? 0) <= 3 && a.teamIds?.includes(String(t.espn))) || new RegExp(`\\b${nickname(t)}\\b`, "i").test(a.headline);
+    });
+  },
+};
+const starBtn = (abbr, extra = "") =>
+  `<button class="star ${Favs.has(abbr) ? "on" : ""} ${extra}" data-fav="${abbr}" aria-pressed="${Favs.has(abbr)}" aria-label="Seguir a ${esc(teamByAbbr(abbr)?.name ?? abbr)}" title="Seguir equipo">★</button>`;
+const favFirst = (list) => list.slice().sort((a, b) => Favs.inGame(b) - Favs.inGame(a));
+
 // ---------- Partidos ----------
 function gameCard(g) {
   const side = (t, isWinner) => `
@@ -37,7 +62,7 @@ function gameCard(g) {
   const tagName = g.id ? "a" : "article";
   const cta = g.id ? `<span class="g-cta">${g.state === "in" ? "Seguir en directo" : g.state === "post" ? "Ver estadísticas" : "Previa y quintetos"} →</span>` : "";
   return `
-    <${tagName} class="game ${g.state === "in" ? "is-live" : ""}" ${g.id ? `href="#partido/${esc(g.id)}"` : ""} style="--ca:${colorOf(g.away.abbr)};--ch:${colorOf(g.home.abbr)}">
+    <${tagName} class="game ${g.state === "in" ? "is-live" : ""} ${Favs.inGame(g) ? "fav" : ""}" ${g.id ? `href="#partido/${esc(g.id)}"` : ""} style="--ca:${colorOf(g.away.abbr)};--ch:${colorOf(g.home.abbr)}">
       <div class="g-head"><span>${status}</span>${tag ? `<span class="tag">${esc(tag)}</span>` : ""}</div>
       ${side(g.away, g.away.winner)}
       ${side(g.home, g.home.winner)}
@@ -106,7 +131,10 @@ async function renderUpcoming(silent = false) {
     fillTicker(all);
     $("#fb-note")?.remove();
     // En directo primero, luego los próximos
-    const games = all.filter((g) => g.state !== "post").sort((a, b) => (b.state === "in") - (a.state === "in") || a.date - b.date);
+    watchFavGames(all);
+    upcomingAll = all;
+    renderMyTeams();
+    const games = favFirst(all.filter((g) => g.state !== "post").sort((a, b) => (b.state === "in") - (a.state === "in") || a.date - b.date));
     if (!games.length) throw new Error("sin partidos");
     el.innerHTML = games.slice(0, 15).map(gameCard).join("");
   } catch {
@@ -114,8 +142,52 @@ async function renderUpcoming(silent = false) {
     const fb = fallbackGames();
     fillTicker(fb);
     el.innerHTML = fb.map(gameCard).join("");
-    el.insertAdjacentHTML("beforebegin", `<p class="fallback-note" id="fb-note">Sin conexión con el calendario en vivo. Te mostramos los partidos de la noche inaugural.</p>`);
+    el.insertAdjacentHTML("beforebegin", `<p class="fallback-note" id="fb-note">No se pudo cargar el calendario ahora mismo (ni de ESPN ni de la copia de respaldo). Se reintentará en 30 segundos.</p>`);
   }
+}
+
+// Avisos cuando empieza o termina un partido de mis equipos
+let upcomingAll = [];
+const gameStates = new Map();
+function watchFavGames(all) {
+  all.forEach((g) => {
+    const prev = gameStates.get(g.id);
+    gameStates.set(g.id, g.state);
+    if (!prev || prev === g.state || !Favs.inGame(g)) return;
+    const title = `${esc(g.away.short)} ${g.state === "pre" ? "@" : esc(g.away.score) + " - " + esc(g.home.score)} ${esc(g.home.short)}`;
+    if (g.state === "in") toast(`<span class="ntag new">Empieza</span><strong>⭐ ${title}</strong>`, `#partido/${g.id}`);
+    if (g.state === "post") toast(`<span class="ntag game">Final</span><strong>⭐ ${title}</strong>`, `#partido/${g.id}`);
+  });
+}
+
+// Bloque "Mis equipos" de la portada
+function renderMyTeams() {
+  const el = $("#my-teams");
+  if (!el) return;
+  if (!Favs.set.size) {
+    el.innerHTML = `<a href="#equipos" class="my-empty"><span class="star on">★</span><div><strong>Sigue a tus equipos</strong><p>Pulsa la estrella de cualquier equipo para ver aquí su próximo partido y sus noticias, y recibir avisos cuando empiece o termine un partido.</p></div></a>`;
+    return;
+  }
+  el.innerHTML = [...Favs.set].map((abbr) => {
+    const t = teamByAbbr(abbr);
+    const games = upcomingAll.filter((g) => g.away.abbr === abbr || g.home.abbr === abbr);
+    const next = games.find((g) => g.state === "in") ?? games.find((g) => g.state === "pre");
+    const last = games.filter((g) => g.state === "post").at(-1);
+    const news = (typeof News !== "undefined" ? News.items : []).find((a) => ((a.teamIds?.length ?? 0) <= 3 && a.teamIds?.includes(String(t.espn))) || new RegExp(`\\b${nickname(t)}\\b`, "i").test(a.headline));
+    const line = (g, label) => {
+      if (!g) return "";
+      const rival = g.away.abbr === abbr ? g.home : g.away;
+      const at = g.away.abbr === abbr ? "@" : "vs";
+      const when = g.state === "in" ? `<span class="live">EN VIVO</span> ${esc(g.away.score)}-${esc(g.home.score)}` : g.state === "post" ? `${esc(g.away.score)}-${esc(g.home.score)}` : `${fmtDate(g.date)} · ${fmtTime(g.date)}`;
+      return `<a class="my-game" href="#partido/${esc(g.id)}"><small>${label}</small><span>${at} <img src="${esc(rival.logo || LOGO(rival.abbr))}" alt="" /> ${esc(rival.short)}</span><b>${when}</b></a>`;
+    };
+    return `<div class="my-team" style="--c:${t.color}">
+      <div class="my-head"><img src="${LOGO(abbr)}" alt="" /><strong>${esc(t.name)}</strong>${starBtn(abbr)}</div>
+      ${line(next, next?.state === "in" ? "Ahora" : "Próximo partido") || `<p class="muted">Sin partidos en los próximos días.</p>`}
+      ${line(last, "Último resultado")}
+      ${news ? `<a class="my-news" href="${esc(news.link || "#noticias")}" target="_blank" rel="noopener"><small>Última noticia</small>${esc(news.headline)}</a>` : ""}
+    </div>`;
+  }).join("");
 }
 
 function renderLogoWall() {
@@ -149,7 +221,7 @@ let dayGames = [];
 let gameFilter = "all";
 function paintDay() {
   const el = $("#day-games");
-  const list = dayGames.filter((g) => gameFilter === "all" || g.state === gameFilter);
+  const list = favFirst(dayGames.filter((g) => gameFilter === "all" || g.state === gameFilter));
   const live = dayGames.filter((g) => g.state === "in").length;
   $('#game-filter [data-f="in"]').innerHTML = `En directo${live ? ` <span class="count">${live}</span>` : ""}`;
   list.length ? (el.innerHTML = list.map(gameCard).join("")) : empty(el, dayGames.length ? "No hay partidos en este filtro." : "No hay partidos este día.");
@@ -221,9 +293,51 @@ async function renderStandings() {
       </div>`
       )
       .join("");
+    renderBracket(confs);
   } catch {
     empty(el, "No se pudo cargar la clasificación en este momento.");
   }
+}
+
+// ---------- Cuadro de playoffs (proyección con la clasificación actual) ----------
+function renderBracket(confs) {
+  const el = $("#bracket");
+  const seedTeam = (t, seed) => {
+    if (!t) return `<div class="bt tbd"><span class="seed">${seed}</span>Por decidir</div>`;
+    return `<div class="bt ${Favs.has(t.abbr) ? "fav" : ""}" style="--c:${colorOf(t.abbr)}"><span class="seed">${seed}</span><img src="${esc(t.logo || LOGO(t.abbr))}" alt="" />${esc(nickname(teamByAbbr(t.abbr) ?? { name: t.name }))}<small>${t.wins}-${t.losses}</small></div>`;
+  };
+  const tbd = (label) => `<div class="bt tbd"><span class="seed">·</span>${label}</div>`;
+  const conf = (c) => {
+    const T = (n) => c.teams[n - 1];
+    const name = /east/i.test(c.name) ? "Este" : "Oeste";
+    return `<div class="bracket">
+      <h3>Conferencia ${name}</h3>
+      <div class="br-cols">
+        <div class="br-col">
+          <small class="br-title">Play-in</small>
+          <div class="match">${seedTeam(T(7), 7)}${seedTeam(T(8), 8)}<span class="m-note">Ganador → 7º</span></div>
+          <div class="match">${seedTeam(T(9), 9)}${seedTeam(T(10), 10)}<span class="m-note">Ganador vs perdedor 7-8 → 8º</span></div>
+        </div>
+        <div class="br-col">
+          <small class="br-title">Primera ronda</small>
+          <div class="match">${seedTeam(T(1), 1)}${tbd("8º (play-in)")}</div>
+          <div class="match">${seedTeam(T(4), 4)}${seedTeam(T(5), 5)}</div>
+          <div class="match">${seedTeam(T(3), 3)}${seedTeam(T(6), 6)}</div>
+          <div class="match">${seedTeam(T(2), 2)}${tbd("7º (play-in)")}</div>
+        </div>
+        <div class="br-col">
+          <small class="br-title">Semifinales</small>
+          <div class="match">${tbd("1/8 vs 4/5")}</div>
+          <div class="match">${tbd("2/7 vs 3/6")}</div>
+        </div>
+        <div class="br-col">
+          <small class="br-title">Final de conferencia</small>
+          <div class="match final">${tbd("Campeón del " + name)}</div>
+        </div>
+      </div>
+    </div>`;
+  };
+  el.innerHTML = confs.map(conf).join("") + `<p class="muted note">Proyección con la clasificación de hoy. Cambia cada día hasta el final de la temporada regular.</p>`;
 }
 
 // ---------- NBA Cup ----------
@@ -357,14 +471,15 @@ function renderTeams(conf = "all") {
   $("#teams").innerHTML = TEAMS.filter((t) => conf === "all" || t.conf === conf)
     .map(
       (t) => `
-    <button class="team-card" data-abbr="${t.abbr}" style="--c:${t.color};--a:${t.alt}" aria-label="${esc(t.name)}">
+    <div class="team-card" role="button" tabindex="0" data-abbr="${t.abbr}" style="--c:${t.color};--a:${t.alt}" aria-label="${esc(t.name)}">
+      ${starBtn(t.abbr)}
       <img class="wm" src="${LOGO(t.abbr)}" alt="" loading="lazy" />
       <img class="logo" src="${LOGO(t.abbr)}" alt="" loading="lazy" />
       ${t.titles ? `<span class="rings">${t.titles} 🏆</span>` : ""}
       <span class="city">${esc(t.city)}</span>
       <strong>${esc(nickname(t))}</strong>
       <span class="meta">${t.conf} · ${t.div}</span>
-    </button>`
+    </div>`
     )
     .join("");
 }
@@ -381,6 +496,7 @@ async function openTeam(abbr) {
       <div>
         <h2>${esc(t.name)}</h2>
         <p>${esc(t.city)} · Conferencia ${t.conf} · División ${t.div}</p>
+        ${starBtn(abbr, "big")}
         <p id="team-live"></p>
       </div>
     </div>
@@ -423,8 +539,13 @@ function initTeams() {
   });
   const grid = $("#teams");
   grid.addEventListener("click", (e) => {
+    if (e.target.closest("[data-fav]")) return;
     const c = e.target.closest(".team-card");
     if (c) openTeam(c.dataset.abbr);
+  });
+  grid.addEventListener("keydown", (e) => {
+    const c = e.target.closest(".team-card");
+    if (c && e.target === c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openTeam(c.dataset.abbr); }
   });
   if (!REDUCED) {
     grid.addEventListener("pointermove", (e) => {
@@ -454,7 +575,7 @@ const PLACEHOLDER =
 function playerCard(p, color) {
   const meta = [p.height, p.weight, p.age && p.age + " años"].filter(Boolean).join(" · ");
   return `
-    <a class="player" href="https://www.espn.com/nba/player/_/id/${esc(p.id)}" target="_blank" rel="noopener" style="--c:${color}">
+    <a class="player" href="#jugador/${esc(p.id)}" style="--c:${color}">
       ${p.jersey ? `<span class="num">${esc(p.jersey)}</span>` : ""}
       <div class="photo"><img src="${esc(p.photo)}" alt="${esc(p.name)}" loading="lazy" onerror="this.onerror=null;this.src=PLACEHOLDER" /></div>
       <div class="info">
@@ -611,7 +732,7 @@ const lazyLoaders = {
   calendario: renderDay,
   clasificacion: renderStandings,
   nbacup: renderCupGames,
-  jugadores: loadRoster,
+  jugadores: () => { loadRoster(); Players.renderLeaders(); Players.initCompare(); },
 };
 
 let prevView = null;
@@ -619,13 +740,18 @@ function route() {
   const hash = decodeURIComponent((location.hash || "#inicio").slice(1));
   const [id, param] = hash.split("/");
   const view = document.getElementById(id)?.classList.contains("view") ? id : "inicio";
-  const navKey = view === "partido" ? "calendario" : view;
+  const navKey = view === "partido" ? "calendario" : view === "jugador" ? "jugadores" : view;
   $$(".view").forEach((v) => v.classList.toggle("active", v.id === view));
-  $$(".nav a").forEach((a) => a.classList.toggle("active", a.getAttribute("href") === "#" + navKey));
+  $$(".nav a").forEach((a) => {
+    const on = a.getAttribute("href") === "#" + navKey;
+    a.classList.toggle("active", on);
+    on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
+  });
   if (view === "partido" && param) {
     $("#match-back").href = prevView && prevView !== "partido" ? "#" + prevView : "#calendario";
     Game.open(param);
   } else Game.stop();
+  if (view === "jugador" && param) Players.open(param);
   if (view === "noticias") News.visited();
   prevView = view;
   $(".nav").classList.remove("open");
@@ -644,6 +770,7 @@ function route() {
 
 document.addEventListener("DOMContentLoaded", () => {
   fillTicker();
+  renderMyTeams();
   renderCountdown();
   renderLogoWall();
   initCalendar();
@@ -659,6 +786,49 @@ document.addEventListener("DOMContentLoaded", () => {
     e.currentTarget.setAttribute("aria-expanded", String(open));
     document.body.style.overflow = open ? "hidden" : "";
   });
+  // Tema claro / oscuro
+  $("#theme-btn").addEventListener("click", () => {
+    const root = document.documentElement;
+    const dark = root.dataset.theme !== "light";
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("nbahub-theme", root.dataset.theme); } catch {}
+  });
+
+  // Instalar como app (Android / escritorio) y service worker para que abra sin conexión
+  let installEvt = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; $("#install-btn").hidden = false; });
+  $("#install-btn").addEventListener("click", async () => {
+    if (!installEvt) return;
+    installEvt.prompt();
+    await installEvt.userChoice;
+    installEvt = null;
+    $("#install-btn").hidden = true;
+  });
+  if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+
+  // Enlace "Saltar al contenido" sin romper la navegación por #
+  $(".skip-link").addEventListener("click", (e) => { e.preventDefault(); $("#main").focus(); });
+
+  // Aviso discreto cuando se usan los datos de respaldo
+  document.addEventListener("datasource", async (e) => {
+    const pill = $("#src-pill");
+    if (e.detail !== "copia") return (pill.hidden = true);
+    pill.hidden = false;
+    try {
+      const m = await Api.meta();
+      pill.textContent = `Datos de respaldo · actualizados ${timeAgo(new Date(m.updated))}`;
+    } catch { pill.textContent = "Datos de respaldo"; }
+  });
+
+  // Estrellas de "Mis equipos" en cualquier parte de la página
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-fav]");
+    if (!b) return;
+    e.preventDefault();
+    e.stopPropagation();
+    Favs.toggle(b.dataset.fav);
+  }, true);
+  document.addEventListener("favs", () => { renderMyTeams(); if (dayGames.length) paintDay(); News.renderList?.(); });
   window.addEventListener("hashchange", route);
   News.init();
   route();

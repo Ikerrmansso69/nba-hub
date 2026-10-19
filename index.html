@@ -6,6 +6,27 @@
   <title>NBA Hub</title>
   <meta name="description" content="Próximos partidos, temporada regular, NBA Cup, campeones, historia, equipos y jugadores de la NBA." />
   <meta name="theme-color" content="#07090f" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="NBA Hub" />
+  <!-- Vista previa al compartir el enlace -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="NBA Hub" />
+  <meta property="og:title" content="NBA Hub · La NBA en directo y en español" />
+  <meta property="og:description" content="Partidos en directo, noticias, lesiones, NBA Cup, campeones, equipos y jugadores." />
+  <meta property="og:url" content="https://ikerrmansso69.github.io/nba-hub/" />
+  <meta property="og:image" content="https://ikerrmansso69.github.io/nba-hub/img/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:locale" content="es_ES" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="NBA Hub · La NBA en directo y en español" />
+  <meta name="twitter:image" content="https://ikerrmansso69.github.io/nba-hub/img/og.png" />
+  <script>
+    // Tema guardado (claro/oscuro) antes de pintar para evitar parpadeos
+    try { const t = localStorage.getItem("nbahub-theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+  </script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏀</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,6 +34,7 @@
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+  <a href="#main" class="skip-link">Saltar al contenido</a>
   <div class="grain" aria-hidden="true"></div>
 
   <header class="topbar">
@@ -32,7 +54,11 @@
       <a href="#jugadores">Jugadores</a>
       <a href="#extras">Extras</a>
     </nav>
-    <button class="menu-btn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span><span></span></button>
+    <div class="top-actions">
+      <button class="icon-btn" id="install-btn" hidden aria-label="Instalar la app" title="Instalar la app">⤓</button>
+      <button class="icon-btn" id="theme-btn" aria-label="Cambiar entre tema claro y oscuro" title="Tema claro / oscuro">◐</button>
+      <button class="menu-btn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span><span></span></button>
+    </div>
   </header>
 
   <div class="ticker" aria-label="Últimas noticias">
@@ -40,7 +66,7 @@
     <div class="ticker-track"><div class="ticker-move" id="ticker"></div></div>
   </div>
 
-  <main>
+  <main id="main" tabindex="-1">
     <!-- ================= INICIO ================= -->
     <section id="inicio" class="view">
       <div class="hero">
@@ -92,6 +118,12 @@
         <div><b data-count="80">80</b><span>Finales disputadas</span></div>
         <div><b data-count="1230">1230</b><span>partidos de temporada regular</span></div>
       </div>
+
+      <div class="section-head reveal">
+        <div><p class="kicker">Favoritos</p><h2>Mis equipos</h2></div>
+        <a href="#equipos" class="link">Elegir equipos →</a>
+      </div>
+      <div id="my-teams" class="my-teams"></div>
 
       <div class="section-head reveal">
         <div><p class="kicker">Calendario</p><h2>Próximos partidos</h2></div>
@@ -175,6 +207,12 @@
       <div id="match"></div>
     </section>
 
+    <!-- ================= JUGADOR ================= -->
+    <section id="jugador" class="view">
+      <a href="#jugadores" class="back">← Jugadores</a>
+      <div id="player-page"></div>
+    </section>
+
     <!-- ================= NOTICIAS ================= -->
     <section id="noticias" class="view">
       <div class="page-hero">
@@ -194,6 +232,7 @@
           <button data-f="injury">Lesiones</button>
           <button data-f="move">Fichajes</button>
           <button data-f="game">Partidos</button>
+          <button data-f="favs">★ Mis equipos</button>
         </div>
         <div id="news-list" class="news-grid"></div>
       </div>
@@ -217,6 +256,8 @@
         <div class="legend-chips"><span class="lg po">1-6 · Playoffs</span><span class="lg pi">7-10 · Play-in</span></div>
       </div>
       <div id="standings" class="standings"></div>
+      <div class="section-head"><div><p class="kicker">Si la temporada acabara hoy</p><h2>Cuadro de playoffs</h2></div></div>
+      <div id="bracket" class="bracket-wrap"></div>
     </section>
 
     <!-- ================= NBA CUP ================= -->
@@ -313,6 +354,19 @@
         <p class="kicker">Plantillas en vivo</p>
         <h2 class="page-title">Jugadores</h2>
       </div>
+      <div class="section-head" style="margin-top:8px"><div><p class="kicker" id="leaders-season">Temporada</p><h2>Líderes de la liga</h2></div></div>
+      <div id="league-leaders" class="league-leaders"></div>
+
+      <div class="section-head" id="comparador"><div><p class="kicker">Cara a cara</p><h2>Comparador</h2></div></div>
+      <div class="cmp-pick">
+        <div class="search"><input type="search" id="cmp-a" list="cmp-list" placeholder="Primer jugador…" aria-label="Primer jugador" /></div>
+        <span class="cmp-vs">VS</span>
+        <div class="search"><input type="search" id="cmp-b" list="cmp-list" placeholder="Segundo jugador…" aria-label="Segundo jugador" /></div>
+        <datalist id="cmp-list"></datalist>
+      </div>
+      <div id="cmp-result"></div>
+
+      <div class="section-head"><div><p class="kicker">Plantillas</p><h2>Por equipo</h2></div></div>
       <div class="team-picker" id="team-picker"></div>
       <div class="toolbar">
         <div class="search"><input type="search" id="roster-search" placeholder="Filtra por nombre o posición…" /></div>
@@ -338,6 +392,7 @@
   </main>
 
   <div id="toasts" class="toasts" aria-live="polite"></div>
+  <div id="src-pill" class="src-pill" hidden title="ESPN no respondió desde tu navegador; se muestra la copia que GitHub guarda cada 10 minutos"></div>
 
   <dialog id="team-modal">
     <button class="close" aria-label="Cerrar">✕</button>
@@ -354,5 +409,6 @@
   <script src="js/app.js"></script>
   <script src="js/news.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/players.js"></script>
 </body>
 </html>

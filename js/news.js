@@ -46,6 +46,16 @@ const News = {
       this.showTab(b.dataset.tab);
     });
     $("#notify-btn").addEventListener("click", () => this.askPermission());
+    // Botón "Traducir": abre la noticia traducida con Google Translate
+    const translate = (e) => {
+      const t = e.target.closest("[data-translate]");
+      if (!t || (e.type === "keydown" && e.key !== "Enter")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      window.open(`https://translate.google.com/translate?sl=en&tl=es&u=${encodeURIComponent(t.dataset.translate)}`, "_blank", "noopener");
+    };
+    document.addEventListener("click", translate, true);
+    document.addEventListener("keydown", translate, true);
     $("#inj-team").addEventListener("change", () => this.renderInjuries());
     $("#inj-search").addEventListener("input", () => this.renderInjuries());
     this.updateNotifyBtn();
@@ -89,17 +99,19 @@ const News = {
           <div class="news-meta">
             <span class="ntag ${kind}">${kind === "general" ? "NBA" : NEWS_KINDS[kind].label}</span>
             ${a.isNew ? `<span class="ntag new">Nuevo</span>` : ""}
+            ${Favs.inNews(a) ? `<span class="ntag fav">★ Tu equipo</span>` : ""}
             <time data-ts="${+a.published}">${timeAgo(a.published)}</time>
           </div>
           <h3>${esc(a.headline)}</h3>
           ${compact ? "" : `<p>${esc(a.description)}</p>`}
+          ${a.link && !compact ? `<span class="translate" data-translate="${esc(a.link)}" role="link" tabindex="0">Traducir al español ↗</span>` : ""}
         </div>
       </a>`;
   },
 
   renderList() {
     const el = $("#news-list");
-    const list = this.items.filter((a) => this.filter === "all" || kindOf(a) === this.filter);
+    const list = this.items.filter((a) => this.filter === "all" || (this.filter === "favs" ? Favs.inNews(a) : kindOf(a) === this.filter));
     el.innerHTML = list.length
       ? list.map((a) => this.card(a)).join("")
       : `<p class="muted">No hay noticias de este tipo ahora mismo.</p>`;
@@ -108,6 +120,7 @@ const News = {
   renderHome() {
     const el = $("#home-news");
     if (el) el.innerHTML = this.items.slice(0, 4).map((a) => this.card(a, true)).join("");
+    renderMyTeams();
   },
 
   tickTimes() {
@@ -133,7 +146,8 @@ const News = {
 
   announce(a) {
     const kind = kindOf(a);
-    toast(`<span class="ntag ${kind}">${kind === "general" ? "Última hora" : NEWS_KINDS[kind].label}</span><strong>${esc(a.headline)}</strong>`, a.link);
+    const fav = Favs.inNews(a) ? `<span class="ntag fav">★ Tu equipo</span>` : "";
+    toast(`<span>${fav}<span class="ntag ${kind}">${kind === "general" ? "Última hora" : NEWS_KINDS[kind].label}</span></span><strong>${esc(a.headline)}</strong>`, a.link);
     if ("Notification" in window && Notification.permission === "granted" && document.hidden) {
       try { new Notification("NBA Hub · " + (kind === "general" ? "Última hora" : NEWS_KINDS[kind].label), { body: a.headline, icon: a.image || undefined }); } catch {}
     }
@@ -230,7 +244,7 @@ function toast(html, link) {
   const box = $("#toasts");
   const t = document.createElement(link ? "a" : "div");
   t.className = "toast";
-  if (link) { t.href = link; t.target = "_blank"; t.rel = "noopener"; }
+  if (link) { t.href = link; if (!link.startsWith("#")) { t.target = "_blank"; t.rel = "noopener"; } }
   t.innerHTML = `<span class="toast-dot"></span><div>${html}</div>`;
   box.prepend(t);
   requestAnimationFrame(() => t.classList.add("show"));

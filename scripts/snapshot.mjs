@@ -50,7 +50,7 @@ const scoreboard = days ? { events: allEvents } : null;
 report.scoreboard = await save("scoreboard.json", scoreboard);
 report.games = allEvents.length;
 
-report.standings = await save("standings.json", await get(`${ESPN_V2}/standings`));
+report.standings = await save("standings.json", await get(`${ESPN_V2}/standings?seasontype=2`));
 report.news = await save("news.json", await get(`${ESPN}/news?limit=50`));
 report.injuries = await save("injuries.json", await get(`${ESPN}/injuries`));
 report.transactions = await save("transactions.json", await get(`${ESPN}/transactions`));
