@@ -85,7 +85,7 @@ if (!rostersAt || Date.now() - new Date(rostersAt) > 12 * 3600e3) {
 report.rosters = rosters;
 
 // Estadísticas de temporada de todos los jugadores (comparador y fichas): cada hora
-let statsAt = prev.statsAt;
+let statsAt = prev.statsLiteAt; // (statsAt era el formato antiguo, de varios MB)
 if (!statsAt || Date.now() - new Date(statsAt) > 3600e3) {
   const stats = await get("https://site.api.espn.com/apis/common/v3/sports/basketball/nba/statistics/byathlete?region=us&lang=en&contentorigin=espn&isqualified=false&limit=700&sort=offensive.avgPoints%3Adesc");
   // Versión reducida: el original pesa varios MB
@@ -110,5 +110,5 @@ if (!statsAt || Date.now() - new Date(statsAt) > 3600e3) {
   report.players = lite?.players.length ?? 0;
 }
 
-await save("meta.json", { updated: now.toISOString(), rostersAt, statsAt, report });
+await save("meta.json", { updated: now.toISOString(), rostersAt, statsLiteAt: statsAt, report });
 console.log(JSON.stringify(report));
