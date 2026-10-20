@@ -173,10 +173,126 @@ const Game = {
   },
 
   // ----- Resumen -----
+  // Evolución del marcador: diferencia (local - visitante) a lo largo del partido
+  flow() {
+    const plays = (this.data.plays ?? []).filter((p) => p.period?.number && p.awayScore !== undefined);
+    if (plays.length < 2) return null;
+    const secs = (c) => { const [m, sx] = String(c ?? "0:00").split(":"); return (+m || 0) * 60 + (parseFloat(sx) || 0); };
+    const len = (n) => (n <= 4 ? 720 : 300);
+    const start = (n) => (n <= 4 ? (n - 1) * 720 : 2880 + (n - 5) * 300);
+    const pts = [{ t: 0, diff: 0 }];
+    plays.forEach((p) => {
+      const n = p.period.number;
+      pts.push({ t: start(n) + len(n) - secs(p.clock?.displayValue), diff: (+p.homeScore || 0) - (+p.awayScore || 0), p });
+    });
+    pts.sort((x, y) => x.t - y.t);
+    const periods = Math.max(...plays.map((p) => p.period.number));
+    const total = start(periods) + len(periods);
+    // Rachas: puntos seguidos de un equipo sin que anote el rival
+    let best = null, cur = null, changes = 0, lastSign = 0;
+    plays.filter((p) => p.scoringPlay && p.team?.id).forEach((p) => {
+      const team = String(p.team.id), v = +p.scoreValue || 0;
+      if (cur && cur.team === team) cur.pts += v;
+      else cur = { team, pts: v, period: p.period.number };
+      if (!best || cur.pts > best.pts) best = { ...cur };
+    });
+    pts.forEach(({ diff }) => { const sg = Math.sign(diff); if (sg && lastSign && sg !== lastSign) changes++; if (sg) lastSign = sg; });
+    const maxHome = Math.max(0, ...pts.map((x) => x.diff)), maxAway = Math.max(0, ...pts.map((x) => -x.diff));
+    return { pts, total, periods, best, changes, maxHome, maxAway };
+  },
+
+  flowChart(f) {
+    const away = this.side("away"), home = this.side("home");
+    const W = 720, H = 200, mid = H / 2;
+    const max = Math.max(5, f.maxHome, f.maxAway);
+    const X = (t) => ((t / f.total) * W).toFixed(1), Y = (d) => (mid - (d / max) * (mid - 12)).toFixed(1);
+    let line = "";
+    f.pts.forEach((p, i) => { line += `${i ? "L" : "M"}${X(p.t)},${Y(i ? f.pts[i - 1].diff : 0)} L${X(p.t)},${Y(p.diff)} `; });
+    const area = `${line} L${X(f.pts.at(-1).t)},${mid} L0,${mid} Z`;
+    const qLines = Array.from({ length: f.periods - 1 }, (_, i) => {
+      const t = i < 4 ? (i + 1) * 720 : 2880 + (i - 3) * 300;
+      return `<line x1="${X(t)}" y1="0" x2="${X(t)}" y2="${H}" class="fl-q"/><text x="${(+X(t)) - 4}" y="${H - 6}" class="fl-qt" text-anchor="end">${i + 1 < 4 ? i + 1 + "º" : i + 1 === 4 ? "4º" : "PR"}</text>`;
+    }).join("");
+    return `
+      <div class="flow-legend"><span style="--c:${home.color}">${esc(home.short)} por delante ↑</span><span style="--c:${away.color}">↓ ${esc(away.short)} por delante</span></div>
+      <svg class="flow" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Evolución de la diferencia en el marcador">
+        <defs>
+          <clipPath id="fl-top"><rect x="0" y="0" width="${W}" height="${mid}"/></clipPath>
+          <clipPath id="fl-bot"><rect x="0" y="${mid}" width="${W}" height="${mid}"/></clipPath>
+        </defs>
+        ${qLines}
+        <line x1="0" y1="${mid}" x2="${W}" y2="${mid}" class="fl-mid"/>
+        <path d="${area}" fill="${home.color}" opacity=".55" clip-path="url(#fl-top)"/>
+        <path d="${area}" fill="${away.color}" opacity=".55" clip-path="url(#fl-bot)"/>
+        <path d="${line}" class="fl-line"/>
+      </svg>
+      <div class="flow-facts">
+        <span><b>${f.maxHome}</b> máx. ventaja ${esc(home.short)}</span>
+        <span><b>${f.maxAway}</b> máx. ventaja ${esc(away.short)}</span>
+        <span><b>${f.changes}</b> cambios de líder</span>
+        ${f.best ? `<span><b>${f.best.pts}-0</b> mejor parcial (${esc(this.sideById(f.best.team).short)}, ${f.best.period <= 4 ? f.best.period + "º" : "prórroga"})</span>` : ""}
+      </div>`;
+  },
+
+  // Máximo anotador de un equipo según el box score
+  topScorer(teamId) {
+    const g = (this.data.boxscore?.players ?? []).find((x) => String(x.team?.id) === String(teamId));
+    const st = g?.statistics?.[0];
+    if (!st) return null;
+    const cols = (st.keys ?? []).length ? st.keys : (st.names ?? st.labels ?? []);
+    const find = (...ks) => ks.map((k) => cols.findIndex((c) => String(c).toLowerCase() === k)).find((i) => i >= 0) ?? -1;
+    const iP = find("points", "pts"), iR = find("rebounds", "totalrebounds", "reb"), iA = find("assists", "ast");
+    if (iP < 0) return null;
+    const best = (st.athletes ?? []).filter((a) => a.stats?.length).sort((a, b) => (+b.stats[iP] || 0) - (+a.stats[iP] || 0))[0];
+    if (!best) return null;
+    return { name: best.athlete?.displayName ?? "", pts: +best.stats[iP] || 0, reb: iR >= 0 ? +best.stats[iR] || 0 : 0, ast: iA >= 0 ? +best.stats[iA] || 0 : 0 };
+  },
+
+  // Crónica automática en español a partir de los datos
+  autoSummary(f) {
+    const away = this.side("away"), home = this.side("home");
+    const state = this.state();
+    if (state === "pre" || away.score === "" || home.score === "") return "";
+    const a = +away.score, h = +home.score;
+    const lead = h >= a ? home : away, trail = h >= a ? away : home;
+    const hi = Math.max(a, h), lo = Math.min(a, h);
+    const period = this.comp().status?.period || Math.max(0, ...(this.data.plays ?? []).map((p) => p.period?.number ?? 0)) || 1;
+    const line = (p) => {
+      if (!p) return "";
+      const extra = [p.reb >= 10 && `${p.reb} rebotes`, p.ast >= 10 && `${p.ast} asistencias`].filter(Boolean);
+      return `${p.name} (${p.pts} puntos${extra.length ? ", " + extra.join(" y ") : ""})`;
+    };
+    const tl = line(this.topScorer(lead.id)), tt = line(this.topScorer(trail.id));
+    let txt;
+    if (state === "post") {
+      const ot = period > 4 ? (period === 5 ? " tras una prórroga" : ` tras ${period - 4} prórrogas`) : "";
+      const margin = hi - lo;
+      const how = margin >= 20 ? "arrollan a" : margin <= 3 ? "ganan in extremis a" : margin <= 8 ? "se imponen a" : "vencen a";
+      txt = `Los ${lead.short} ${how} los ${trail.short} por ${hi}-${lo}${ot}.`;
+      if (tl) txt += ` ${tl} lideró a los ganadores`;
+      if (tt) txt += `${tl ? ";" : ""} en los ${trail.short} destacó ${tt}.`;
+      else if (tl) txt += ".";
+    } else {
+      txt = h === a
+        ? `Empate a ${a} en el ${period <= 4 ? period + "º cuarto" : "tiempo extra"}.`
+        : `Los ${lead.short} mandan ${hi}-${lo} sobre los ${trail.short} en el ${period <= 4 ? period + "º cuarto" : "tiempo extra"}.`;
+      if (tl) txt += ` Máximo anotador de los ${lead.short}: ${tl}.`;
+    }
+    if (f?.best?.pts >= 8) txt += ` El mejor parcial fue un ${f.best.pts}-0 de los ${this.sideById(f.best.team).short} en el ${f.best.period <= 4 ? f.best.period + "º cuarto" : "tiempo extra"}.`;
+    if (f?.changes >= 10) txt += ` Partido igualadísimo: el liderato cambió de manos ${f.changes} veces.`;
+    return txt;
+  },
+
   paneSummary(el) {
     const d = this.data;
     const away = this.side("away"), home = this.side("home");
     const parts = [];
+
+    // Crónica y evolución del marcador
+    const f = this.state() !== "pre" ? this.flow() : null;
+    const story = this.autoSummary(f);
+    if (story) parts.push(`<div class="card-block story"><h3>${this.state() === "post" ? "Crónica" : "Así va el partido"}</h3><p>${esc(story)}</p><small class="muted">Texto generado automáticamente con las estadísticas del partido.</small></div>`);
+    if (f) parts.push(`<div class="card-block wide"><h3>Evolución del marcador</h3>${this.flowChart(f)}</div>`);
 
     // Probabilidad de victoria
     const wp = d.winprobability ?? [];
@@ -280,7 +396,8 @@ const Game = {
       gi.venue?.fullName && ["Pabellón", [gi.venue.fullName, gi.venue.address?.city].filter(Boolean).join(", ")],
       gi.attendance && ["Asistencia", Number(gi.attendance).toLocaleString("es-ES") + " espectadores"],
       gi.officials?.length && ["Árbitros", gi.officials.map((o) => o.displayName ?? o.fullName).join(", ")],
-      this.comp().broadcasts?.length && ["TV", this.comp().broadcasts.map((b) => b.media?.shortName ?? b.names?.join(", ")).filter(Boolean).join(", ")],
+      this.comp().broadcasts?.length && ["TV (EE. UU.)", this.comp().broadcasts.map((b) => b.media?.shortName ?? b.names?.join(", ")).filter(Boolean).join(", ")],
+      ["En España", TV_SPAIN.channels.join(" · ") + " (consulta cada plataforma)"],
     ].filter(Boolean);
     const venueImg = safeUrl(gi.venue?.images?.[0]?.href);
     if (info.length) parts.push(`<div class="card-block">${venueImg ? `<img class="venue-img" src="${esc(venueImg)}" alt="${esc(gi.venue?.fullName ?? "")}" loading="lazy" onerror="this.remove()" />` : ""}<h3>Información</h3><dl class="info">${info.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>`);

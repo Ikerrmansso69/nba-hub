@@ -9,20 +9,24 @@ Web sobre la NBA en español: próximos partidos, temporada regular, clasificaci
 | Sección | Contenido |
 |---|---|
 | **Inicio** | Cuenta atrás para la temporada 2026-27, campeón vigente y próximos partidos (7 días, en vivo) |
+| **Hoy** | Todos los partidos de la jornada en una vista estilo Flashscore: en directo, por jugar y finalizados, con parciales y marcadores que parpadean al cambiar |
 | **Noticias** | Última hora que se actualiza sola cada minuto (con aviso emergente y notificaciones del navegador), filtros de lesiones/fichajes/partidos, parte de lesiones de toda la liga y movimientos de plantilla |
 | **Partidos** | Calendario día a día con filtro En directo / Finalizados / Próximos; los marcadores se refrescan solos |
-| **Ficha de partido** | Estilo Flashscore: marcador en vivo, parciales, probabilidad de victoria, líderes, estadísticas de equipo, quintetos sobre la pista (probables antes del partido), box score, jugada a jugada, mapa de tiro y bajas |
+| **Ficha de partido** | Estilo Flashscore: crónica automática, gráfico de evolución del marcador, marcador en vivo, parciales, probabilidad de victoria, líderes, estadísticas de equipo, quintetos sobre la pista (probables antes del partido), box score, jugada a jugada, mapa de tiro y bajas |
 | **Clasificación** | Conferencias Este y Oeste, con zonas de playoffs y play-in |
 | **NBA Cup** | Formato del torneo, calendario 2026, todas las finales (2023-2025) y partidos de la Copa |
 | **Campeones** | Todas las Finales desde 1947 con MVP, buscador, filtro por décadas y gráfico de anillos por franquicia |
 | **Historia** | Línea temporal de la liga desde 1891 hasta hoy |
 | **Equipos** | Galería con los logos de los 30 equipos; al pulsar, ficha con datos, títulos y plantilla con fotos |
 | **Jugadores** | Plantillas actuales de cada equipo (con foto, dorsal, posición, altura…) y leyendas históricas |
+| **Ficha de equipo** | Calendario completo con resultados, botón para añadir todos sus partidos a tu calendario (.ics / Google Calendar), forma reciente, líderes, bajas y plantilla |
+| **Buscador** | Ctrl+K o / para ir a cualquier equipo, jugador o sección |
 | **Mis equipos** | Marca tus equipos con ⭐: su próximo partido, último resultado y noticias en la portada, y avisos cuando empiezan o terminan sus partidos |
 | **Fichas de jugador** | Promedios de la temporada, biografía y últimos partidos con gráfico de puntos |
 | **Comparador** | Dos jugadores cara a cara, estadística por estadística |
 | **Cuadro de playoffs** | Proyección de play-in y playoffs con la clasificación del día |
-| **Extras** | Récords míticos y un quiz de preguntas NBA con reloj de 24 segundos |
+| **Juegos** | Porra diaria con liga entre amigos (por código, sin registro), Adivina el jugador, trivia con reloj de 24 s y récords |
+| **Historia** | Línea temporal, todos los MVP, números 1 del Draft desde 1980 y dorsales retirados |
 
 ## Cómo funciona
 
@@ -66,3 +70,7 @@ sw.js           # Service worker (app instalable)
 ## Aviso
 
 Proyecto de aficionado sin relación oficial con la NBA ni con ESPN. Logos e imágenes pertenecen a sus respectivos propietarios.
+
+## Contador de visitas (opcional)
+
+La web está preparada para [GoatCounter](https://www.goatcounter.com/), un contador gratuito y sin cookies. Crea una cuenta, elige un código (por ejemplo `nbahub`) y ponlo en la constante `GOATCOUNTER` de `js/app.js`.

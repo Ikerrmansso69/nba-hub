@@ -132,6 +132,7 @@ async function renderUpcoming(silent = false) {
     $("#fb-note")?.remove();
     // En directo primero, luego los próximos
     watchFavGames(all);
+    $("#nav-live").hidden = !all.some((g) => g.state === "in");
     Videos.loadHome(all);
     upcomingAll = all;
     renderMyTeams();
@@ -432,6 +433,35 @@ function initChampions() {
   renderFinals();
 }
 
+// ---------- Historia: MVP, Draft y dorsales retirados ----------
+function renderHistoryExtras() {
+  const teamAbbr = (name) => {
+    const t = TEAMS.find((x) => x.name === name) ?? TEAMS.find((x) => FRANCHISE[name] === x.abbr);
+    return t?.abbr ?? FRANCHISE[name] ?? ({ "Cincinnati Royals": "sac", "Buffalo Braves": "lac", "New Jersey Nets": "bkn", "New Orleans Hornets": "no", "Charlotte Hornets": "cha", "Philadelphia Warriors": "gs", "Baltimore Bullets": "wsh" })[name] ?? null;
+  };
+  const logo = (name) => { const a = teamAbbr(name); return a ? `<img src="${LOGO(a)}" alt="" loading="lazy" />` : `<span class="nologo">—</span>`; };
+  // Más MVP
+  const counts = {};
+  MVPS.forEach((m) => (counts[m.player] = (counts[m.player] || 0) + 1));
+  $("#mvp-tops").innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6)
+    .map(([p, n]) => `<div class="mvp-top"><b>${n}</b><span>${esc(p)}</span></div>`).join("");
+  $("#mvp-table tbody").innerHTML = MVPS.slice().reverse().map((m) => `<tr>
+    <td class="year-cell">${m.year - 1}-${String(m.year).slice(2)}</td>
+    <td><strong>${esc(m.player)}</strong></td>
+    <td><span class="team-cell">${logo(m.team)}${esc(m.team)}</span></td></tr>`).join("");
+  $("#draft-grid").innerHTML = DRAFT_TOP.slice().reverse().map((d) => `
+    <div class="draft-card"><span class="d-year">${d.year}</span>${logo(d.team)}<div><strong>${esc(d.player)}</strong><small>${esc(d.team)}</small></div></div>`).join("");
+  $("#retired").innerHTML = RETIRED.map((r) => {
+    const t = r.abbr ? teamByAbbr(r.abbr) : null;
+    return `<div class="banner retired-banner ${t && isLight(t.color) ? "light" : ""}" style="--c:${t?.color ?? "#1d428a"};--a:${t?.alt ?? "#c9082a"};--i:${Math.random() * 6}">
+      ${r.abbr ? `<img src="${LOGO(r.abbr)}" alt="" loading="lazy" />` : `<span class="nba-mark">NBA</span>`}
+      <span class="b-count">${esc(r.num)}</span>
+      <span class="b-label">${esc(r.player)}</span>
+      <span class="b-name">${esc(r.note ?? r.team)}</span>
+    </div>`;
+  }).join("");
+}
+
 // ---------- Historia ----------
 function initHistory() {
   const el = $("#timeline");
@@ -542,11 +572,11 @@ function initTeams() {
   grid.addEventListener("click", (e) => {
     if (e.target.closest("[data-fav]")) return;
     const c = e.target.closest(".team-card");
-    if (c) openTeam(c.dataset.abbr);
+    if (c) location.hash = `#equipo/${c.dataset.abbr}`;
   });
   grid.addEventListener("keydown", (e) => {
     const c = e.target.closest(".team-card");
-    if (c && e.target === c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openTeam(c.dataset.abbr); }
+    if (c && e.target === c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); location.hash = `#equipo/${c.dataset.abbr}`; }
   });
   if (!REDUCED) {
     grid.addEventListener("pointermove", (e) => {
@@ -739,9 +769,9 @@ const lazyLoaders = {
 let prevView = null;
 function route() {
   const hash = decodeURIComponent((location.hash || "#inicio").slice(1));
-  const [id, param] = hash.split("/");
+  const [id, param, extra] = hash.split("/");
   const view = document.getElementById(id)?.classList.contains("view") ? id : "inicio";
-  const navKey = view === "partido" ? "calendario" : view === "jugador" ? "jugadores" : view;
+  const navKey = view === "partido" ? "calendario" : view === "jugador" ? "jugadores" : view === "equipo" ? "equipos" : view;
   $$(".view").forEach((v) => v.classList.toggle("active", v.id === view));
   $$(".nav a").forEach((a) => {
     const on = a.getAttribute("href") === "#" + navKey;
@@ -753,7 +783,13 @@ function route() {
     Game.open(param);
   } else Game.stop();
   if (view === "jugador" && param) Players.open(param);
-  if (view === "extras") Porra.open();
+  if (view === "extras") {
+    Porra.open();
+    if (!Guess.pool) Guess.init();
+    if (param === "liga" && extra) { Porra.addFriend(extra); history.replaceState(null, "", "#extras"); }
+  }
+  if (view === "hoy") Tonight.open(); else Tonight.stop();
+  if (view === "equipo" && param) TeamPage.open(param);
   if (view === "noticias") News.visited();
   prevView = view;
   $(".nav").classList.remove("open");
@@ -808,6 +844,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 
+  // Contador de visitas sin cookies (GoatCounter). Se activa poniendo aquí el código de tu cuenta,
+  // p. ej. "nbahub" para https://nbahub.goatcounter.com
+  const GOATCOUNTER = "";
+  if (GOATCOUNTER && location.protocol === "https:") {
+    const sc = document.createElement("script");
+    sc.async = true;
+    sc.src = "https://gc.zgo.at/count.js";
+    sc.dataset.goatcounter = `https://${GOATCOUNTER}.goatcounter.com/count`;
+    sc.dataset.goatcounterSettings = JSON.stringify({ no_onload: true });
+    sc.onload = () => window.goatcounter?.count?.({ path: location.pathname + (location.hash.split("/")[0] || "#inicio") });
+    document.head.appendChild(sc);
+    window.addEventListener("hashchange", () => window.goatcounter?.count?.({ path: location.pathname + location.hash.split("/")[0] }));
+  }
+
   // Enlace "Saltar al contenido" sin romper la navegación por #
   $(".skip-link").addEventListener("click", (e) => { e.preventDefault(); $("#main").focus(); });
 
@@ -833,6 +883,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("favs", () => { renderMyTeams(); if (dayGames.length) paintDay(); News.renderList?.(); });
   window.addEventListener("hashchange", route);
   Videos.init();
+  Search.init();
+  renderHistoryExtras();
   News.init();
   route();
 

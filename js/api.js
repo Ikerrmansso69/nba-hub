@@ -62,6 +62,7 @@ function parseEvent(ev) {
       score: c.score,
       record: c.records?.[0]?.summary ?? "",
       winner: c.winner,
+      lines: (c.linescores ?? []).map((l) => l.displayValue ?? l.value ?? ""),
     };
   };
   return {

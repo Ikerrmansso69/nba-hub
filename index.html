@@ -44,6 +44,7 @@
     </a>
     <nav class="nav" aria-label="Secciones">
       <a href="#inicio">Inicio</a>
+      <a href="#hoy">Hoy <span class="nav-live" id="nav-live" hidden></span></a>
       <a href="#noticias">Noticias <span class="nav-badge" id="news-badge" hidden></span></a>
       <a href="#calendario">Partidos</a>
       <a href="#clasificacion">Clasificación</a>
@@ -55,6 +56,7 @@
       <a href="#extras">Juegos</a>
     </nav>
     <div class="top-actions">
+      <button class="icon-btn" id="search-btn" aria-label="Buscar (Ctrl+K)" title="Buscar · Ctrl+K">⌕</button>
       <button class="icon-btn" id="install-btn" hidden aria-label="Instalar la app" title="Instalar la app">⤓</button>
       <button class="icon-btn" id="theme-btn" aria-label="Cambiar entre tema claro y oscuro" title="Tema claro / oscuro">◐</button>
       <button class="menu-btn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span><span></span></button>
@@ -93,7 +95,7 @@
           </h1>
           <p class="lead">Partidos, resultados, clasificación, NBA Cup, 80 años de historia y los 30 equipos. Todo en un solo sitio.</p>
           <div class="cta">
-            <a href="#calendario" class="btn primary">Ver partidos →</a>
+            <a href="#hoy" class="btn primary">Partidos de hoy →</a>
             <a href="#equipos" class="btn">Explorar equipos</a>
           </div>
         </div>
@@ -206,6 +208,23 @@
         <button data-f="pre">Próximos</button>
       </div>
       <div id="day-games" class="games"></div>
+    </section>
+
+    <!-- ================= HOY ================= -->
+    <section id="hoy" class="view">
+      <div class="page-hero">
+        <p class="kicker"><span class="live-dot"></span> Se actualiza solo</p>
+        <h2 class="page-title">Hoy</h2>
+        <p class="muted" id="tonight-date"></p>
+        <div class="tonight-counts" id="tonight-counts"></div>
+      </div>
+      <div id="tonight"></div>
+    </section>
+
+    <!-- ================= EQUIPO ================= -->
+    <section id="equipo" class="view">
+      <a href="#equipos" class="back">← Equipos</a>
+      <div id="team-page"></div>
     </section>
 
     <!-- ================= PARTIDO ================= -->
@@ -337,6 +356,16 @@
         <button class="htl-arrow right" aria-label="Siguiente">›</button>
       </div>
       <div class="htl-progress"><span id="htl-bar"></span></div>
+
+      <div class="section-head"><div><p class="kicker">Mejor jugador de la temporada</p><h2>Todos los MVP</h2></div></div>
+      <div class="mvp-tops" id="mvp-tops"></div>
+      <div class="table-wrap"><table class="table compact" id="mvp-table"><thead><tr><th>Temporada</th><th>Jugador</th><th>Equipo</th></tr></thead><tbody></tbody></table></div>
+
+      <div class="section-head"><div><p class="kicker">Desde 1980</p><h2>Números 1 del Draft</h2></div></div>
+      <div class="draft-grid" id="draft-grid"></div>
+
+      <div class="section-head"><div><p class="kicker">Leyendas en el techo</p><h2>Dorsales retirados</h2></div></div>
+      <div class="retired" id="retired"></div>
     </section>
 
     <!-- ================= EQUIPOS ================= -->
@@ -394,6 +423,9 @@
       </div>
       <div id="porra"></div>
 
+      <div class="section-head"><div><p class="kicker">Juego</p><h2>Adivina el jugador</h2></div></div>
+      <div id="guess"></div>
+
       <div class="section-head"><div><p class="kicker">Libro de récords</p><h2>Récords</h2></div></div>
       <div id="records" class="records"></div>
 
@@ -404,6 +436,14 @@
 
   <div id="toasts" class="toasts" aria-live="polite"></div>
   <div id="src-pill" class="src-pill" hidden title="ESPN no respondió desde tu navegador; se muestra la copia que GitHub guarda cada 5 minutos"></div>
+
+  <dialog id="search" class="search-dlg" aria-label="Buscador">
+    <div class="search-box">
+      <div class="search"><input type="search" id="search-input" placeholder="Busca un equipo, un jugador o una sección…" autocomplete="off" aria-label="Buscar" /></div>
+      <kbd>Esc</kbd>
+    </div>
+    <div id="search-results" class="search-results" role="listbox"></div>
+  </dialog>
 
   <dialog id="team-modal">
     <button class="close" aria-label="Cerrar">✕</button>
@@ -423,5 +463,9 @@
   <script src="js/players.js"></script>
   <script src="js/videos.js"></script>
   <script src="js/porra.js"></script>
+  <script src="js/tonight.js"></script>
+  <script src="js/team.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/guess.js"></script>
 </body>
 </html>
