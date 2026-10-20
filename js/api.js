@@ -133,7 +133,7 @@ const Api = {
 
   async teamSchedule(id, seasontype) {
     const q = seasontype ? `?seasontype=${seasontype}` : "";
-    const data = await getJSON(`${ESPN}/teams/${id}/schedule${q}`);
+    const data = await getJSON(`${ESPN}/teams/${id}/schedule${q}`, false, !seasontype || seasontype === 2 ? `schedule-${id}.json` : null);
     return data.events ?? [];
   },
 

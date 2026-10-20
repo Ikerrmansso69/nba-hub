@@ -225,3 +225,81 @@ const FALLBACK_GAMES = [
   { date: "2026-10-20", away: "phi", home: "ny",  note: "Noche inaugural · Los Knicks reciben su anillo" },
   { date: "2026-10-20", away: "okc", home: "sa",  note: "Noche inaugural · Revancha de la final del Oeste" },
 ];
+
+// MVP de la temporada regular (año = final de temporada)
+const MVPS = [
+  [1956, "Bob Pettit", "St. Louis Hawks"], [1957, "Bob Cousy", "Boston Celtics"], [1958, "Bill Russell", "Boston Celtics"],
+  [1959, "Bob Pettit", "St. Louis Hawks"], [1960, "Wilt Chamberlain", "Philadelphia Warriors"], [1961, "Bill Russell", "Boston Celtics"],
+  [1962, "Bill Russell", "Boston Celtics"], [1963, "Bill Russell", "Boston Celtics"], [1964, "Oscar Robertson", "Cincinnati Royals"],
+  [1965, "Bill Russell", "Boston Celtics"], [1966, "Wilt Chamberlain", "Philadelphia 76ers"], [1967, "Wilt Chamberlain", "Philadelphia 76ers"],
+  [1968, "Wilt Chamberlain", "Philadelphia 76ers"], [1969, "Wes Unseld", "Baltimore Bullets"], [1970, "Willis Reed", "New York Knicks"],
+  [1971, "Kareem Abdul-Jabbar", "Milwaukee Bucks"], [1972, "Kareem Abdul-Jabbar", "Milwaukee Bucks"], [1973, "Dave Cowens", "Boston Celtics"],
+  [1974, "Kareem Abdul-Jabbar", "Milwaukee Bucks"], [1975, "Bob McAdoo", "Buffalo Braves"], [1976, "Kareem Abdul-Jabbar", "Los Angeles Lakers"],
+  [1977, "Kareem Abdul-Jabbar", "Los Angeles Lakers"], [1978, "Bill Walton", "Portland Trail Blazers"], [1979, "Moses Malone", "Houston Rockets"],
+  [1980, "Kareem Abdul-Jabbar", "Los Angeles Lakers"], [1981, "Julius Erving", "Philadelphia 76ers"], [1982, "Moses Malone", "Houston Rockets"],
+  [1983, "Moses Malone", "Philadelphia 76ers"], [1984, "Larry Bird", "Boston Celtics"], [1985, "Larry Bird", "Boston Celtics"],
+  [1986, "Larry Bird", "Boston Celtics"], [1987, "Magic Johnson", "Los Angeles Lakers"], [1988, "Michael Jordan", "Chicago Bulls"],
+  [1989, "Magic Johnson", "Los Angeles Lakers"], [1990, "Magic Johnson", "Los Angeles Lakers"], [1991, "Michael Jordan", "Chicago Bulls"],
+  [1992, "Michael Jordan", "Chicago Bulls"], [1993, "Charles Barkley", "Phoenix Suns"], [1994, "Hakeem Olajuwon", "Houston Rockets"],
+  [1995, "David Robinson", "San Antonio Spurs"], [1996, "Michael Jordan", "Chicago Bulls"], [1997, "Karl Malone", "Utah Jazz"],
+  [1998, "Michael Jordan", "Chicago Bulls"], [1999, "Karl Malone", "Utah Jazz"], [2000, "Shaquille O'Neal", "Los Angeles Lakers"],
+  [2001, "Allen Iverson", "Philadelphia 76ers"], [2002, "Tim Duncan", "San Antonio Spurs"], [2003, "Tim Duncan", "San Antonio Spurs"],
+  [2004, "Kevin Garnett", "Minnesota Timberwolves"], [2005, "Steve Nash", "Phoenix Suns"], [2006, "Steve Nash", "Phoenix Suns"],
+  [2007, "Dirk Nowitzki", "Dallas Mavericks"], [2008, "Kobe Bryant", "Los Angeles Lakers"], [2009, "LeBron James", "Cleveland Cavaliers"],
+  [2010, "LeBron James", "Cleveland Cavaliers"], [2011, "Derrick Rose", "Chicago Bulls"], [2012, "LeBron James", "Miami Heat"],
+  [2013, "LeBron James", "Miami Heat"], [2014, "Kevin Durant", "Oklahoma City Thunder"], [2015, "Stephen Curry", "Golden State Warriors"],
+  [2016, "Stephen Curry", "Golden State Warriors"], [2017, "Russell Westbrook", "Oklahoma City Thunder"], [2018, "James Harden", "Houston Rockets"],
+  [2019, "Giannis Antetokounmpo", "Milwaukee Bucks"], [2020, "Giannis Antetokounmpo", "Milwaukee Bucks"], [2021, "Nikola Jokić", "Denver Nuggets"],
+  [2022, "Nikola Jokić", "Denver Nuggets"], [2023, "Joel Embiid", "Philadelphia 76ers"], [2024, "Nikola Jokić", "Denver Nuggets"],
+  [2025, "Shai Gilgeous-Alexander", "Oklahoma City Thunder"], [2026, "Shai Gilgeous-Alexander", "Oklahoma City Thunder"],
+].map(([year, player, team]) => ({ year, player, team }));
+
+// Números 1 del Draft desde 1980
+const DRAFT_TOP = [
+  [1980, "Joe Barry Carroll", "Golden State Warriors"], [1981, "Mark Aguirre", "Dallas Mavericks"], [1982, "James Worthy", "Los Angeles Lakers"],
+  [1983, "Ralph Sampson", "Houston Rockets"], [1984, "Hakeem Olajuwon", "Houston Rockets"], [1985, "Patrick Ewing", "New York Knicks"],
+  [1986, "Brad Daugherty", "Cleveland Cavaliers"], [1987, "David Robinson", "San Antonio Spurs"], [1988, "Danny Manning", "LA Clippers"],
+  [1989, "Pervis Ellison", "Sacramento Kings"], [1990, "Derrick Coleman", "New Jersey Nets"], [1991, "Larry Johnson", "Charlotte Hornets"],
+  [1992, "Shaquille O'Neal", "Orlando Magic"], [1993, "Chris Webber", "Orlando Magic"], [1994, "Glenn Robinson", "Milwaukee Bucks"],
+  [1995, "Joe Smith", "Golden State Warriors"], [1996, "Allen Iverson", "Philadelphia 76ers"], [1997, "Tim Duncan", "San Antonio Spurs"],
+  [1998, "Michael Olowokandi", "LA Clippers"], [1999, "Elton Brand", "Chicago Bulls"], [2000, "Kenyon Martin", "New Jersey Nets"],
+  [2001, "Kwame Brown", "Washington Wizards"], [2002, "Yao Ming", "Houston Rockets"], [2003, "LeBron James", "Cleveland Cavaliers"],
+  [2004, "Dwight Howard", "Orlando Magic"], [2005, "Andrew Bogut", "Milwaukee Bucks"], [2006, "Andrea Bargnani", "Toronto Raptors"],
+  [2007, "Greg Oden", "Portland Trail Blazers"], [2008, "Derrick Rose", "Chicago Bulls"], [2009, "Blake Griffin", "LA Clippers"],
+  [2010, "John Wall", "Washington Wizards"], [2011, "Kyrie Irving", "Cleveland Cavaliers"], [2012, "Anthony Davis", "New Orleans Hornets"],
+  [2013, "Anthony Bennett", "Cleveland Cavaliers"], [2014, "Andrew Wiggins", "Cleveland Cavaliers"], [2015, "Karl-Anthony Towns", "Minnesota Timberwolves"],
+  [2016, "Ben Simmons", "Philadelphia 76ers"], [2017, "Markelle Fultz", "Philadelphia 76ers"], [2018, "Deandre Ayton", "Phoenix Suns"],
+  [2019, "Zion Williamson", "New Orleans Pelicans"], [2020, "Anthony Edwards", "Minnesota Timberwolves"], [2021, "Cade Cunningham", "Detroit Pistons"],
+  [2022, "Paolo Banchero", "Orlando Magic"], [2023, "Victor Wembanyama", "San Antonio Spurs"], [2024, "Zaccharie Risacher", "Atlanta Hawks"],
+  [2025, "Cooper Flagg", "Dallas Mavericks"], [2026, "AJ Dybantsa", "Washington Wizards"],
+].map(([year, player, team]) => ({ year, player, team }));
+
+// Algunos de los dorsales retirados más célebres
+const RETIRED = [
+  { num: "6", player: "Bill Russell", team: "Toda la NBA", abbr: null, note: "Retirado en los 30 equipos en 2022" },
+  { num: "23", player: "Michael Jordan", team: "Chicago Bulls", abbr: "chi" },
+  { num: "8 y 24", player: "Kobe Bryant", team: "Los Angeles Lakers", abbr: "lal" },
+  { num: "32", player: "Magic Johnson", team: "Los Angeles Lakers", abbr: "lal" },
+  { num: "33", player: "Kareem Abdul-Jabbar", team: "Los Angeles Lakers", abbr: "lal" },
+  { num: "16", player: "Pau Gasol", team: "Los Angeles Lakers", abbr: "lal" },
+  { num: "33", player: "Larry Bird", team: "Boston Celtics", abbr: "bos" },
+  { num: "34", player: "Paul Pierce", team: "Boston Celtics", abbr: "bos" },
+  { num: "5", player: "Kevin Garnett", team: "Boston Celtics", abbr: "bos" },
+  { num: "21", player: "Tim Duncan", team: "San Antonio Spurs", abbr: "sa" },
+  { num: "20", player: "Manu Ginóbili", team: "San Antonio Spurs", abbr: "sa" },
+  { num: "9", player: "Tony Parker", team: "San Antonio Spurs", abbr: "sa" },
+  { num: "41", player: "Dirk Nowitzki", team: "Dallas Mavericks", abbr: "dal" },
+  { num: "3", player: "Dwyane Wade", team: "Miami Heat", abbr: "mia" },
+  { num: "34", player: "Hakeem Olajuwon", team: "Houston Rockets", abbr: "hou" },
+  { num: "12", player: "John Stockton", team: "Utah Jazz", abbr: "utah" },
+  { num: "32", player: "Karl Malone", team: "Utah Jazz", abbr: "utah" },
+  { num: "3", player: "Allen Iverson", team: "Philadelphia 76ers", abbr: "phi" },
+  { num: "13", player: "Steve Nash", team: "Phoenix Suns", abbr: "phx" },
+  { num: "32", player: "Shaquille O'Neal", team: "Orlando Magic", abbr: "orl" },
+];
+
+// Dónde ver la NBA en España (dato de la temporada 2025-26; los derechos 2026-27 no están confirmados)
+const TV_SPAIN = {
+  channels: ["DAZN", "Prime Video", "NBA League Pass"],
+  note: "En España la NBA se emitió en 2025-26 en DAZN y Prime Video, y todos los partidos están en NBA League Pass. Confirma en cada plataforma qué partidos ofrece esta temporada.",
+};

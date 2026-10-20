@@ -96,6 +96,36 @@ if (!rostersAt || Date.now() - new Date(rostersAt) > 12 * 3600e3) {
 }
 report.rosters = rosters;
 
+// Calendarios de los 30 equipos (temporada regular), reducidos: cada 2 horas
+let schedAt = prev.schedAt;
+let schedules = 0;
+if (!schedAt || Date.now() - new Date(schedAt) > 2 * 3600e3) {
+  for (const id of TEAM_IDS) {
+    const sc = await get(`${ESPN}/teams/${id}/schedule?seasontype=2`);
+    if (!sc) continue;
+    const slim = {
+      events: (sc.events ?? []).map((e) => {
+        const c = e.competitions?.[0] ?? {};
+        return {
+          id: e.id, date: e.date,
+          competitions: [{
+            status: { type: { state: c.status?.type?.state, completed: c.status?.type?.completed, shortDetail: c.status?.type?.shortDetail } },
+            competitors: (c.competitors ?? []).map((x) => ({
+              homeAway: x.homeAway, winner: x.winner,
+              score: x.score && { displayValue: x.score.displayValue ?? x.score },
+              team: { id: x.team?.id, abbreviation: x.team?.abbreviation, displayName: x.team?.displayName, shortDisplayName: x.team?.shortDisplayName, logo: x.team?.logos?.[0]?.href ?? x.team?.logo },
+            })),
+            broadcasts: (c.broadcasts ?? []).map((b) => ({ media: { shortName: b.media?.shortName } })),
+          }],
+        };
+      }),
+    };
+    if (await save(`schedule-${id}.json`, slim)) schedules++;
+  }
+  if (schedules) schedAt = now.toISOString();
+}
+report.schedules = schedules;
+
 // Estadísticas de temporada de todos los jugadores (comparador y fichas): cada hora
 let statsAt = prev.statsLiteAt; // (statsAt era el formato antiguo, de varios MB)
 if (!statsAt || Date.now() - new Date(statsAt) > 3600e3) {
@@ -122,5 +152,5 @@ if (!statsAt || Date.now() - new Date(statsAt) > 3600e3) {
   report.players = lite?.players.length ?? 0;
 }
 
-await save("meta.json", { updated: now.toISOString(), rostersAt, statsLiteAt: statsAt, report });
+await save("meta.json", { updated: now.toISOString(), rostersAt, statsLiteAt: statsAt, schedAt, report });
 console.log(JSON.stringify(report));
