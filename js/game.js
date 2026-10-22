@@ -160,7 +160,7 @@ const Game = {
       hasBox && ["box", "Jugadores"],
       hasPlays && ["pbp", "Jugada a jugada"],
       hasPlays && ["shots", "Mapa de tiro"],
-      d.videos?.length && ["videos", "Vídeos"],
+      (d.videos?.length || this.state() === "post") && ["videos", "Vídeos"],
       ["injuries", "Bajas"],
     ].filter(Boolean);
   },
@@ -177,7 +177,13 @@ const Game = {
   flow() {
     const plays = (this.data.plays ?? []).filter((p) => p.period?.number && p.awayScore !== undefined);
     if (plays.length < 2) return null;
-    const secs = (c) => { const [m, sx] = String(c ?? "0:00").split(":"); return (+m || 0) * 60 + (parseFloat(sx) || 0); };
+    // El reloj viene como "11:42" o, en el último minuto, solo segundos ("6.7")
+    const secs = (c) => {
+      const str = String(c ?? "0:00");
+      if (!str.includes(":")) return parseFloat(str) || 0;
+      const [m, sx] = str.split(":");
+      return (+m || 0) * 60 + (parseFloat(sx) || 0);
+    };
     const len = (n) => (n <= 4 ? 720 : 300);
     const start = (n) => (n <= 4 ? (n - 1) * 720 : 2880 + (n - 5) * 300);
     const pts = [{ t: 0, diff: 0 }];
@@ -412,7 +418,11 @@ const Game = {
 
   // ----- Vídeos -----
   paneVideos(el) {
-    el.innerHTML = `<div class="videos-grid">${(this.data.videos ?? []).map((v) => Videos.card(v)).join("")}</div>`;
+    const game = { id: this.id, date: this.comp().date, away: this.side("away"), home: this.side("home") };
+    el.innerHTML = `
+      <div class="yt-cta"><span>¿No se ven los vídeos de ESPN desde España? El canal oficial de la NBA publica el resumen de cada partido.</span>
+        <a class="btn primary" href="${esc(Videos.youtube(game))}" target="_blank" rel="noopener">▶ Resumen en YouTube</a></div>
+      <div class="videos-grid">${(this.data.videos ?? []).map((v) => Videos.card(v, game)).join("")}</div>`;
   },
 
   // ----- Estadísticas de equipo -----
