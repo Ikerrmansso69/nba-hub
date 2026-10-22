@@ -149,7 +149,7 @@ const CUP_2026 = [
   { date: "30 oct 2026", what: "Arranca la fase de grupos" },
   { date: "27 nov 2026", what: "Última jornada de grupos" },
   { date: "Dic 2026", what: "Cuartos de final (en casa del mejor clasificado)" },
-  { date: "11 dic 2026", what: "Gran final" },
+  { date: "11 dic 2026", what: "Gran final en el Hinkle Fieldhouse (Indianápolis)" },
 ];
 
 const HISTORY = [
@@ -302,4 +302,14 @@ const RETIRED = [
 const TV_SPAIN = {
   channels: ["DAZN", "Prime Video", "NBA League Pass"],
   note: "En España la NBA se emitió en 2025-26 en DAZN y Prime Video, y todos los partidos están en NBA League Pass. Confirma en cada plataforma qué partidos ofrece esta temporada.",
+};
+
+// Grupos de la Emirates NBA Cup 2026 (sorteo oficial)
+const CUP_GROUPS = {
+  "Este A": ["det", "tor", "orl", "mil", "bkn"],
+  "Este B": ["ny", "phi", "cle", "mia", "ind"],
+  "Este C": ["bos", "atl", "cha", "chi", "wsh"],
+  "Oeste A": ["den", "hou", "phx", "dal", "utah"],
+  "Oeste B": ["okc", "min", "lac", "no", "mem"],
+  "Oeste C": ["lal", "gs", "por", "sac", "sa"],
 };

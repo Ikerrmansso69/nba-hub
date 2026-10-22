@@ -116,6 +116,7 @@ if (!schedAt || Date.now() - new Date(schedAt) > 2 * 3600e3) {
               team: { id: x.team?.id, abbreviation: x.team?.abbreviation, displayName: x.team?.displayName, shortDisplayName: x.team?.shortDisplayName, logo: x.team?.logos?.[0]?.href ?? x.team?.logo },
             })),
             broadcasts: (c.broadcasts ?? []).map((b) => ({ media: { shortName: b.media?.shortName } })),
+            notes: (c.notes ?? []).map((n) => ({ headline: n.headline })),
           }],
         };
       }),
@@ -125,6 +126,65 @@ if (!schedAt || Date.now() - new Date(schedAt) > 2 * 3600e3) {
   if (schedules) schedAt = now.toISOString();
 }
 report.schedules = schedules;
+
+// NBA Cup: partidos de fase de grupos (a partir de los calendarios de los equipos)
+const GROUPS = {
+  "Este A": ["DET", "TOR", "ORL", "MIL", "BKN"], "Este B": ["NY", "PHI", "CLE", "MIA", "IND"], "Este C": ["BOS", "ATL", "CHA", "CHI", "WSH"],
+  "Oeste A": ["DEN", "HOU", "PHX", "DAL", "UTAH"], "Oeste B": ["OKC", "MIN", "LAC", "NO", "MEM"], "Oeste C": ["LAL", "GS", "POR", "SAC", "SA"],
+};
+const groupOf = (abbr) => Object.keys(GROUPS).find((g) => GROUPS[g].includes(abbr));
+const cupGames = new Map();
+for (const id of TEAM_IDS) {
+  let sc;
+  try { sc = JSON.parse(await readFile(join(OUT, `schedule-${id}.json`), "utf8")); } catch { continue; }
+  for (const e of sc.events ?? []) {
+    const c = e.competitions?.[0] ?? {};
+    const [a, b] = (c.competitors ?? []).map((x) => x.team?.abbreviation);
+    const d = new Date(e.date);
+    const noted = (c.notes ?? []).some((n) => /cup/i.test(n.headline ?? ""));
+    // Respaldo si ESPN no marca la nota: rivales del mismo grupo entre el 30 oct y el 28 nov
+    const inWindow = d >= new Date("2026-10-30T12:00Z") && d <= new Date("2026-11-29T12:00Z");
+    if (!(noted || (a && b && groupOf(a) && groupOf(a) === groupOf(b) && inWindow))) continue;
+    cupGames.set(e.id, {
+      id: e.id, date: e.date, group: groupOf(a) === groupOf(b) ? groupOf(a) : null,
+      state: c.status?.type?.state, completed: c.status?.type?.completed,
+      teams: (c.competitors ?? []).map((x) => ({ abbr: x.team?.abbreviation, homeAway: x.homeAway, score: x.score?.displayValue ?? null, winner: x.winner })),
+    });
+  }
+}
+report.cup = await save("cup.json", { groups: GROUPS, games: [...cupGames.values()].sort((x, y) => new Date(x.date) - new Date(y.date)) }) && cupGames.size;
+
+// Récords de la temporada: se acumulan las mejores actuaciones de cada partido terminado
+let season = { processed: [], perfs: [], teamHighs: [] };
+try { season = JSON.parse(await readFile(join(OUT, "season.json"), "utf8")); } catch {}
+const processed = new Set(season.processed);
+const finals = events.filter((e) => e.status?.type?.completed && e.season?.type === 2 && !processed.has(e.id));
+for (const e of finals.slice(0, 25)) {
+  const sm = near.includes(e) ? JSON.parse(await readFile(join(OUT, `summary-${e.id}.json`), "utf8").catch(() => "null")) : await get(`${ESPN}/summary?event=${e.id}`);
+  if (!sm?.boxscore?.players) continue;
+  const comps = sm.header?.competitions?.[0]?.competitors ?? [];
+  const abbrOf = (tid) => comps.find((x) => String(x.team?.id) === String(tid))?.team?.abbreviation;
+  for (const g of sm.boxscore.players) {
+    const st = g.statistics?.[0] ?? {};
+    const keys = st.keys ?? [];
+    const k = (name) => keys.indexOf(name);
+    const team = g.team?.abbreviation, opp = comps.find((x) => String(x.team?.id) !== String(g.team?.id))?.team?.abbreviation;
+    for (const a of st.athletes ?? []) {
+      if (!a.stats?.length) continue;
+      const v = (name) => +(a.stats[k(name)] ?? 0) || 0;
+      const line = { id: a.athlete?.id, name: a.athlete?.displayName, team, opp, event: e.id, date: e.date, pts: v("points"), reb: v("rebounds"), ast: v("assists"), stl: v("steals"), blk: v("blocks"), threes: +String(a.stats[k("threePointFieldGoalsMade-threePointFieldGoalsAttempted")] ?? "0").split("-")[0] || 0 };
+      const doubles = [line.pts, line.reb, line.ast, line.stl, line.blk].filter((x) => x >= 10).length;
+      line.td = doubles >= 3;
+      if (line.pts >= 30 || line.td || line.reb >= 18 || line.ast >= 14 || line.threes >= 7) season.perfs.push(line);
+    }
+  }
+  for (const c of comps) season.teamHighs.push({ team: c.team?.abbreviation, opp: abbrOf(comps.find((x) => x !== c)?.team?.id), pts: +c.score || 0, event: e.id, date: e.date });
+  processed.add(e.id);
+}
+season.processed = [...processed];
+season.teamHighs = season.teamHighs.sort((a, b) => b.pts - a.pts).slice(0, 30);
+season.perfs = season.perfs.sort((a, b) => b.pts - a.pts).slice(0, 400);
+report.season = await save("season.json", season) && processed.size;
 
 // Estadísticas de temporada de todos los jugadores (comparador y fichas): cada hora
 let statsAt = prev.statsLiteAt; // (statsAt era el formato antiguo, de varios MB)
