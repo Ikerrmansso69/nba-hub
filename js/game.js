@@ -122,6 +122,7 @@ const Game = {
           <div class="m-status">${statusTxt}</div>
           <div class="m-score">${state === "pre" ? `<span class="vs">VS</span>` : `<b class="${away.winner ? "w" : ""}">${esc(away.score)}</b><i>-</i><b class="${home.winner ? "w" : ""}">${esc(home.score)}</b>`}</div>
           ${state === "in" ? `<div class="m-refresh"><span class="pulse"></span>Actualización automática · ${new Date().toLocaleTimeString("es-ES")}</div>` : ""}
+          <button class="share-btn" id="share-card" title="Crear una imagen del resultado para compartir">📤 Compartir ${state === "pre" ? "partido" : "resultado"}</button>
         </div>
         <div class="m-team">
           <img src="${esc(home.logo)}" alt="" />
@@ -138,6 +139,7 @@ const Game = {
       <div class="m-tabs" role="tablist">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${k === this.tab ? "active" : ""}">${l}</button>`).join("")}</div>
       <div id="m-pane"></div>`;
 
+    $("#share-card").addEventListener("click", () => ShareCard.share(this));
     $(".m-tabs").addEventListener("click", (e) => {
       const b = e.target.closest("button");
       if (!b) return;
@@ -158,6 +160,7 @@ const Game = {
       hasStats && ["stats", "Estadísticas"],
       ["lineups", "Alineaciones"],
       hasBox && ["box", "Jugadores"],
+      hasPlays && ["quarters", "Por cuartos"],
       hasPlays && ["pbp", "Jugada a jugada"],
       hasPlays && ["shots", "Mapa de tiro"],
       (d.videos?.length || this.state() === "post") && ["videos", "Vídeos"],
@@ -167,7 +170,7 @@ const Game = {
 
   renderPane() {
     const el = $("#m-pane");
-    const fn = { videos: this.paneVideos, resumen: this.paneSummary, stats: this.paneStats, lineups: this.paneLineups, box: this.paneBox, pbp: this.panePbp, shots: this.paneShots, injuries: this.paneInjuries }[this.tab];
+    const fn = { quarters: this.paneQuarters, videos: this.paneVideos, resumen: this.paneSummary, stats: this.paneStats, lineups: this.paneLineups, box: this.paneBox, pbp: this.panePbp, shots: this.paneShots, injuries: this.paneInjuries }[this.tab];
     el.innerHTML = "";
     fn.call(this, el);
   },
@@ -414,6 +417,62 @@ const Game = {
   sideById(id) {
     const a = this.side("away");
     return a.id === id ? a : this.side("home");
+  },
+
+  // ----- Estadísticas por cuarto (calculadas jugada a jugada) -----
+  paneQuarters(el) {
+    const away = this.side("away"), home = this.side("home");
+    const plays = this.data.plays ?? [];
+    const periods = [...new Set(plays.map((p) => p.period?.number).filter(Boolean))].sort((a, b) => a - b);
+    const blank = () => ({ pts: 0, fgm: 0, fga: 0, tpm: 0, tpa: 0, ftm: 0, fta: 0, reb: 0, oreb: 0, tov: 0, pf: 0 });
+    const S = {};
+    periods.forEach((n) => (S[n] = { [away.id]: blank(), [home.id]: blank() }));
+    plays.forEach((p) => {
+      const n = p.period?.number, t = String(p.team?.id ?? "");
+      const x = S[n]?.[t];
+      if (!x) return;
+      const type = `${p.type?.text ?? ""}`;
+      const text = `${p.text ?? ""}`;
+      if (p.scoringPlay) x.pts += +p.scoreValue || 0;
+      if (/^Free Throw/i.test(type)) { x.fta++; if (p.scoringPlay) x.ftm++; }
+      else if (p.shootingPlay) {
+        x.fga++; if (p.scoringPlay) x.fgm++;
+        if (/three point/i.test(text)) { x.tpa++; if (p.scoringPlay) x.tpm++; }
+      }
+      if (/rebound/i.test(type)) { x.reb++; if (/offensive/i.test(type)) x.oreb++; }
+      if (/turnover/i.test(type)) x.tov++;
+      else if (/foul/i.test(type)) x.pf++;
+    });
+    const label = (n) => (n <= 4 ? `${n}º cuarto` : `Prórroga ${n - 4}`);
+    const rows = [
+      ["Puntos", (x) => x.pts, true],
+      ["Tiros de campo", (x) => `${x.fgm}/${x.fga}`, null, (x) => x.fga ? x.fgm / x.fga : 0],
+      ["% Tiros de campo", (x) => (x.fga ? Math.round((x.fgm / x.fga) * 100) + "%" : "–"), true, (x) => x.fga ? x.fgm / x.fga : 0],
+      ["Triples", (x) => `${x.tpm}/${x.tpa}`, null, (x) => x.tpm],
+      ["Tiros libres", (x) => `${x.ftm}/${x.fta}`, null, (x) => x.ftm],
+      ["Rebotes", (x) => x.reb, true],
+      ["Rebotes ofensivos", (x) => x.oreb, true],
+      ["Pérdidas", (x) => x.tov, false],
+      ["Faltas", (x) => x.pf, false],
+    ];
+    // Cuarto decisivo: el de mayor diferencia de puntos
+    const swing = periods.map((n) => ({ n, d: S[n][home.id].pts - S[n][away.id].pts })).sort((a, b) => Math.abs(b.d) - Math.abs(a.d))[0];
+    const cell = (n, [, f, higherBetter, cmp]) => {
+      const a = S[n][away.id], h = S[n][home.id];
+      const va = (cmp ?? f)(a), vh = (cmp ?? f)(h);
+      const better = higherBetter === false ? (va < vh ? "a" : vh < va ? "h" : "") : (va > vh ? "a" : vh > va ? "h" : "");
+      return `<td><span class="qv ${better === "a" ? "hi" : ""}" style="--c:${away.color}">${esc(f(a))}</span><span class="qsep">·</span><span class="qv ${better === "h" ? "hi" : ""}" style="--c:${home.color}">${esc(f(h))}</span></td>`;
+    };
+    el.innerHTML = `
+      ${swing ? `<div class="card-block story"><h3>El cuarto decisivo</h3><p>El ${label(swing.n).toLowerCase()} lo ganaron los ${esc((swing.d >= 0 ? home : away).short)} por ${Math.abs(swing.d)} puntos (${S[swing.n][away.id].pts}-${S[swing.n][home.id].pts}).</p></div>` : ""}
+      <div class="card-block">
+        <div class="stats-head"><span><img src="${esc(away.logo)}" alt="" />${esc(away.short)}</span><span class="muted">visitante · local</span><span>${esc(home.short)}<img src="${esc(home.logo)}" alt="" /></span></div>
+        <div class="table-wrap"><table class="table compact qtable">
+          <thead><tr><th></th>${periods.map((n) => `<th>${n <= 4 ? n + "º" : "PR" + (n - 4)}</th>`).join("")}</tr></thead>
+          <tbody>${rows.map((r) => `<tr><th>${r[0]}</th>${periods.map((n) => cell(n, r)).join("")}</tr>`).join("")}</tbody>
+        </table></div>
+        <p class="muted note">Calculado a partir de la jugada a jugada de ESPN; puede diferir ligeramente del acta oficial.</p>
+      </div>`;
   },
 
   // ----- Vídeos -----

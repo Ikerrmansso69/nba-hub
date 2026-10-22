@@ -10,10 +10,11 @@ Web sobre la NBA en español: próximos partidos, temporada regular, clasificaci
 |---|---|
 | **Inicio** | Cuenta atrás para la temporada 2026-27, campeón vigente y próximos partidos (7 días, en vivo) |
 | **Hoy** | Todos los partidos de la jornada en una vista estilo Flashscore: en directo, por jugar y finalizados, con parciales y marcadores que parpadean al cambiar |
+| **Multipartido** | Hasta 4 partidos a la vez con marcador, parciales, máximos anotadores y últimas jugadas; avisos de **final apretado** (≤5 puntos en los 3 últimos minutos) |
 | **Noticias** | Última hora que se actualiza sola cada minuto (con aviso emergente y notificaciones del navegador), filtros de lesiones/fichajes/partidos, parte de lesiones de toda la liga y movimientos de plantilla |
 | **Partidos** | Calendario día a día con filtro En directo / Finalizados / Próximos; los marcadores se refrescan solos |
-| **Ficha de partido** | Estilo Flashscore: crónica automática, gráfico de evolución del marcador, marcador en vivo, parciales, probabilidad de victoria, líderes, estadísticas de equipo, quintetos sobre la pista (probables antes del partido), box score, jugada a jugada, mapa de tiro y bajas |
-| **Clasificación** | Conferencias Este y Oeste, con zonas de playoffs y play-in |
+| **Ficha de partido** | Estilo Flashscore: crónica automática, gráfico de evolución del marcador, estadísticas por cuarto, imagen del resultado para compartir, marcador en vivo, parciales, probabilidad de victoria, líderes, estadísticas de equipo, quintetos sobre la pista (probables antes del partido), box score, jugada a jugada, mapa de tiro y bajas |
+| **Clasificación** | Conferencias Este y Oeste, cuadro de playoffs, rachas y récords de la temporada |
 | **NBA Cup** | Formato del torneo, calendario 2026, todas las finales (2023-2025) y partidos de la Copa |
 | **Campeones** | Todas las Finales desde 1947 con MVP, buscador, filtro por décadas y gráfico de anillos por franquicia |
 | **Historia** | Línea temporal de la liga desde 1891 hasta hoy |
@@ -23,6 +24,7 @@ Web sobre la NBA en español: próximos partidos, temporada regular, clasificaci
 | **Buscador** | Ctrl+K o / para ir a cualquier equipo, jugador o sección |
 | **Mis equipos** | Marca tus equipos con ⭐: su próximo partido, último resultado y noticias en la portada, y avisos cuando empiezan o terminan sus partidos |
 | **Fichas de jugador** | Promedios de la temporada, biografía y últimos partidos con gráfico de puntos |
+| **Carrera por el MVP** | Ranking con un índice propio (no oficial) basado en estadísticas y victorias |
 | **Comparador** | Dos jugadores cara a cara, estadística por estadística |
 | **Cuadro de playoffs** | Proyección de play-in y playoffs con la clasificación del día |
 | **Juegos** | Porra diaria con liga entre amigos (por código, sin registro), Adivina el jugador, trivia con reloj de 24 s y récords |

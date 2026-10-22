@@ -134,6 +134,7 @@ async function renderUpcoming(silent = false) {
     watchFavGames(all);
     $("#nav-live").hidden = !all.some((g) => g.state === "in");
     Videos.loadHome(all);
+    LastNight.render(all);
     upcomingAll = all;
     renderMyTeams();
     const games = favFirst(all.filter((g) => g.state !== "post").sort((a, b) => (b.state === "in") - (a.state === "in") || a.date - b.date));
@@ -761,9 +762,9 @@ const loaded = new Set();
 const lazyLoaders = {
   inicio: renderUpcoming,
   calendario: renderDay,
-  clasificacion: renderStandings,
-  nbacup: renderCupGames,
-  jugadores: () => { loadRoster(); Players.renderLeaders(); Players.initCompare(); },
+  clasificacion: () => { renderStandings(); renderSeasonRecords(); },
+  nbacup: () => { renderCupGames(); renderCupGroups(); },
+  jugadores: () => { loadRoster(); renderMvpRace(); Players.renderLeaders(); Players.initCompare(); },
 };
 
 let prevView = null;
@@ -771,7 +772,7 @@ function route() {
   const hash = decodeURIComponent((location.hash || "#inicio").slice(1));
   const [id, param, extra] = hash.split("/");
   const view = document.getElementById(id)?.classList.contains("view") ? id : "inicio";
-  const navKey = view === "partido" ? "calendario" : view === "jugador" ? "jugadores" : view === "equipo" ? "equipos" : view;
+  const navKey = view === "partido" ? "calendario" : view === "jugador" ? "jugadores" : view === "equipo" ? "equipos" : view === "multi" ? "hoy" : view;
   $$(".view").forEach((v) => v.classList.toggle("active", v.id === view));
   $$(".nav a").forEach((a) => {
     const on = a.getAttribute("href") === "#" + navKey;
@@ -789,6 +790,7 @@ function route() {
     if (param === "liga" && extra) { Porra.addFriend(extra); history.replaceState(null, "", "#extras"); }
   }
   if (view === "hoy") Tonight.open(); else Tonight.stop();
+  if (view === "multi") Multi.open(); else Multi.stop();
   if (view === "equipo" && param) TeamPage.open(param);
   if (view === "noticias") News.visited();
   prevView = view;
@@ -884,6 +886,7 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("hashchange", route);
   Videos.init();
   Search.init();
+  CloseAlerts.init();
   renderHistoryExtras();
   News.init();
   route();

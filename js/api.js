@@ -70,6 +70,8 @@ function parseEvent(ev) {
     date: new Date(ev.date),
     state: ev.status?.type?.state, // pre | in | post
     detail: ev.status?.type?.shortDetail ?? "",
+    period: ev.status?.period ?? 0,
+    clock: ev.status?.displayClock ?? "",
     seasonType: ev.season?.type, // 1 pretemporada · 2 regular · 3 playoffs · 5/6 play-in / NBA Cup
     note: comp.notes?.[0]?.headline ?? "",
     venue: comp.venue?.fullName ?? "",
@@ -98,6 +100,10 @@ const Api = {
       .filter((g) => !data.__copia || (etDay(g.date) >= lo && etDay(g.date) <= hi))
       .sort((a, b) => a.date - b.date);
   },
+
+  // Datos que solo existen en la copia de respaldo (los genera la tarea de GitHub)
+  cup() { return getJSON(`${SNAP}cup.json?t=${Math.floor(Date.now() / 300000)}`); },
+  season() { return getJSON(`${SNAP}season.json?t=${Math.floor(Date.now() / 300000)}`); },
 
   async meta() {
     return fetchJSON(`${SNAP}meta.json?t=${Math.floor(Date.now() / 60000)}`);

@@ -140,6 +140,14 @@
         <div id="home-videos" class="rail videos-rail"></div>
       </div>
 
+      <div id="last-night-wrap" hidden>
+        <div class="section-head">
+          <div><p class="kicker" id="last-night-date">Anoche</p><h2>Anoche en la NBA</h2></div>
+          <a href="#hoy" class="link">Ver todos →</a>
+        </div>
+        <div id="last-night" class="last-night"></div>
+      </div>
+
       <div class="section-head reveal">
         <div><p class="kicker"><span class="live-dot"></span> Al minuto</p><h2>Últimas noticias</h2></div>
         <a href="#noticias" class="link">Todas las noticias →</a>
@@ -217,8 +225,24 @@
         <h2 class="page-title">Hoy</h2>
         <p class="muted" id="tonight-date"></p>
         <div class="tonight-counts" id="tonight-counts"></div>
+        <div class="hoy-actions">
+          <a class="btn primary" href="#multi">▦ Ver varios partidos a la vez</a>
+          <button class="btn close-toggle" data-close-toggle aria-pressed="true">🔥 Avisos de finales apretados</button>
+        </div>
       </div>
       <div id="tonight"></div>
+    </section>
+
+    <!-- ================= MULTI-PARTIDO ================= -->
+    <section id="multi" class="view">
+      <a href="#hoy" class="back">← Hoy</a>
+      <div class="page-hero">
+        <p class="kicker"><span class="live-dot"></span> Hasta 4 partidos a la vez</p>
+        <h2 class="page-title">Multi&shy;partido</h2>
+        <p class="muted">Pulsa los partidos que quieras seguir. Se actualiza solo cada 15 segundos.</p>
+      </div>
+      <div class="multi-picker" id="multi-picker"></div>
+      <div id="multi-boards" class="multi-boards"></div>
     </section>
 
     <!-- ================= EQUIPO ================= -->
@@ -284,6 +308,8 @@
       <div id="standings" class="standings"></div>
       <div class="section-head"><div><p class="kicker">Si la temporada acabara hoy</p><h2>Cuadro de playoffs</h2></div></div>
       <div id="bracket" class="bracket-wrap"></div>
+      <div class="section-head"><div><p class="kicker">Temporada 2026-27</p><h2>Rachas y récords</h2></div></div>
+      <div id="season-records" class="season-records"></div>
     </section>
 
     <!-- ================= NBA CUP ================= -->
@@ -310,6 +336,9 @@
         <div class="step"><b>03</b><strong>Semifinales</strong><span>Partido único</span></div>
         <div class="step"><b>04</b><strong>Final</strong><span>El campeón levanta la Copa</span></div>
       </div>
+
+      <div class="section-head"><div><p class="kicker">Sorteo oficial</p><h2>Grupos 2026</h2></div></div>
+      <div id="cup-groups" class="cup-groups"></div>
 
       <div class="section-head"><div><p class="kicker">Fechas clave</p><h2>Calendario 2026</h2></div></div>
       <div id="cup-dates" class="cup-dates"></div>
@@ -390,7 +419,10 @@
         <p class="kicker">Plantillas en vivo</p>
         <h2 class="page-title">Jugadores</h2>
       </div>
-      <div class="section-head" style="margin-top:8px"><div><p class="kicker" id="leaders-season">Temporada</p><h2>Líderes de la liga</h2></div></div>
+      <div class="section-head" style="margin-top:8px"><div><p class="kicker">Índice NBA Hub</p><h2>Carrera por el MVP</h2></div></div>
+      <div id="mvp-race"></div>
+
+      <div class="section-head"><div><p class="kicker" id="leaders-season">Temporada</p><h2>Líderes de la liga</h2></div></div>
       <div id="league-leaders" class="league-leaders"></div>
 
       <div class="section-head" id="comparador"><div><p class="kicker">Cara a cara</p><h2>Comparador</h2></div></div>
@@ -467,5 +499,8 @@
   <script src="js/team.js"></script>
   <script src="js/search.js"></script>
   <script src="js/guess.js"></script>
+  <script src="js/multi.js"></script>
+  <script src="js/season.js"></script>
+  <script src="js/share.js"></script>
 </body>
 </html>
