@@ -127,30 +127,28 @@ if (!schedAt || Date.now() - new Date(schedAt) > 2 * 3600e3) {
 }
 report.schedules = schedules;
 
-// NBA Cup: partidos de fase de grupos (a partir de los calendarios de los equipos)
+// NBA Cup: partidos de la Copa (fase de grupos y eliminatorias)
 const GROUPS = {
   "Este A": ["DET", "TOR", "ORL", "MIL", "BKN"], "Este B": ["NY", "PHI", "CLE", "MIA", "IND"], "Este C": ["BOS", "ATL", "CHA", "CHI", "WSH"],
   "Oeste A": ["DEN", "HOU", "PHX", "DAL", "UTAH"], "Oeste B": ["OKC", "MIN", "LAC", "NO", "MEM"], "Oeste C": ["LAL", "GS", "POR", "SAC", "SA"],
 };
 const groupOf = (abbr) => Object.keys(GROUPS).find((g) => GROUPS[g].includes(abbr));
-const cupGames = new Map();
-for (const id of TEAM_IDS) {
-  let sc;
-  try { sc = JSON.parse(await readFile(join(OUT, `schedule-${id}.json`), "utf8")); } catch { continue; }
-  for (const e of sc.events ?? []) {
-    const c = e.competitions?.[0] ?? {};
-    const [a, b] = (c.competitors ?? []).map((x) => x.team?.abbreviation);
-    const d = new Date(e.date);
-    const noted = (c.notes ?? []).some((n) => /cup/i.test(n.headline ?? ""));
-    // Respaldo si ESPN no marca la nota: rivales del mismo grupo entre el 30 oct y el 28 nov
-    const inWindow = d >= new Date("2026-10-30T12:00Z") && d <= new Date("2026-11-29T12:00Z");
-    if (!(noted || (a && b && groupOf(a) && groupOf(a) === groupOf(b) && inWindow))) continue;
-    cupGames.set(e.id, {
-      id: e.id, date: e.date, group: groupOf(a) === groupOf(b) ? groupOf(a) : null,
-      state: c.status?.type?.state, completed: c.status?.type?.completed,
-      teams: (c.competitors ?? []).map((x) => ({ abbr: x.team?.abbreviation, homeAway: x.homeAway, score: x.score?.displayValue ?? null, winner: x.winner })),
-    });
-  }
+// Solo cuentan los partidos que ESPN marca como "NBA Cup" en el calendario diario. Cada partido
+// aparece ahí 10 días antes de jugarse, así que se van acumulando de una ejecución a otra.
+let prevCup = {};
+try { prevCup = JSON.parse(await readFile(join(OUT, "cup.json"), "utf8")); } catch {}
+const cupGames = new Map((prevCup.games ?? []).filter((g) => g.confirmed).map((g) => [g.id, g]));
+for (const e of allEvents) {
+  const c = e.competitions?.[0] ?? {};
+  const note = (c.notes ?? []).map((n) => n.headline ?? "").find((h) => /cup/i.test(h));
+  if (!note && !cupGames.has(e.id)) continue;
+  const teams = (c.competitors ?? []).map((x) => ({ abbr: x.team?.abbreviation, homeAway: x.homeAway, score: x.score ?? null, winner: x.winner }));
+  const [a, b] = teams.map((t) => t.abbr);
+  cupGames.set(e.id, {
+    id: e.id, date: e.date, confirmed: true, round: note ?? cupGames.get(e.id)?.round ?? "NBA Cup",
+    group: groupOf(a) && groupOf(a) === groupOf(b) && /group/i.test(note ?? cupGames.get(e.id)?.round ?? "") ? groupOf(a) : null,
+    state: e.status?.type?.state, completed: e.status?.type?.completed, teams,
+  });
 }
 report.cup = await save("cup.json", { groups: GROUPS, games: [...cupGames.values()].sort((x, y) => new Date(x.date) - new Date(y.date)) }) && cupGames.size;
 
