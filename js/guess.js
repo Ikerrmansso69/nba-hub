@@ -12,7 +12,13 @@ const Guess = {
     const el = $("#guess");
     skeleton(el, 1, 320);
     await Players.load();
-    const pool = (Players.data?.players ?? []).filter((p) => p.photo && (p.s.gamesPlayed ?? 0) >= 15).sort((a, b) => (b.s.avgPoints ?? 0) - (a.s.avgPoints ?? 0)).slice(0, 150);
+    // Jugadores con minutos de verdad (el mínimo de partidos crece a lo largo de la temporada)
+    const all = Players.data?.players ?? [];
+    const maxGp = Math.max(1, ...all.map((p) => p.s.gamesPlayed ?? 0));
+    const pool = all
+      .filter((p) => p.photo && (p.s.gamesPlayed ?? 0) >= Math.max(1, Math.min(15, Math.floor(maxGp * 0.5))) && (p.s.avgMinutes ?? 0) >= 15)
+      .sort((a, b) => (b.s.avgPoints ?? 0) - (a.s.avgPoints ?? 0))
+      .slice(0, 150);
     if (!pool.length) return empty(el, "No se pudieron cargar los jugadores para el juego.");
     this.pool = pool;
     this.next();
@@ -38,7 +44,7 @@ const Guess = {
     return [
       `Posición: <b>${esc(p.pos ?? "?")}</b> · ${fmtStat(s.avgPoints)} puntos por partido en ${esc(Players.data.season)}`,
       `${fmtStat(s.avgRebounds)} rebotes y ${fmtStat(s.avgAssists)} asistencias por partido`,
-      `Equipo: ${t ? `<img src="${LOGO(t.abbr)}" alt="" class="g-logo" /> <b>${esc(t.name)}</b>` : `<b>${esc(p.teamName ?? p.team ?? "?")}</b>`}`,
+      `Equipo: ${t ? `<img src="${LOGO(t.abbr)}" alt="" class="gx-logo" /> <b>${esc(t.name)}</b>` : `<b>${esc(p.teamName ?? p.team ?? "?")}</b>`}`,
       `Tiene <b>${esc(p.age ?? "?")}</b> años`,
       `Sus iniciales son <b>${esc(p.name.split(" ").map((w) => w[0]).join(". "))}.</b>`,
     ];
@@ -51,25 +57,25 @@ const Guess = {
     const shown = this.clues().slice(0, this.over ? 5 : this.tries + 1);
     el.innerHTML = `
       <div class="guess">
-        <div class="g-photo"><img src="${esc(safeUrl(this.cur.photo))}" alt="" style="filter: blur(${blur}px) ${this.over ? "" : "grayscale(.6)"}" onerror="Guess.photoFail(this)" />
-          ${this.over ? `<span class="g-name">${esc(this.cur.name)}</span>` : `<span class="g-q">?</span>`}</div>
-        <div class="g-body">
-          <div class="g-score"><span>Intento <b>${Math.min(this.tries + 1, this.max)}/${this.max}</b></span><span>Puntos <b>${st.points ?? 0}</b></span><span>Racha <b>${st.streak ?? 0}${(st.streak ?? 0) >= 3 ? " 🔥" : ""}</b></span></div>
-          <ol class="g-clues">${shown.map((c) => `<li>${c}</li>`).join("")}</ol>
-          ${msg ? `<p class="g-msg">${msg}</p>` : ""}
+        <div class="gx-photo"><img src="${esc(safeUrl(this.cur.photo))}" alt="" style="filter: blur(${blur}px) ${this.over ? "" : "grayscale(.6)"}" onerror="Guess.photoFail(this)" />
+          ${this.over ? `<span class="gx-name">${esc(this.cur.name)}</span>` : `<span class="gx-q">?</span>`}</div>
+        <div class="gx-body">
+          <div class="gx-score"><span>Intento <b>${Math.min(this.tries + 1, this.max)}/${this.max}</b></span><span>Puntos <b>${st.points ?? 0}</b></span><span>Racha <b>${st.streak ?? 0}${(st.streak ?? 0) >= 3 ? " 🔥" : ""}</b></span></div>
+          <ol class="gx-clues">${shown.map((c) => `<li>${c}</li>`).join("")}</ol>
+          ${msg ? `<p class="gx-msg">${msg}</p>` : ""}
           ${this.over
-            ? `<div class="g-actions"><button class="btn primary" id="g-next">Siguiente jugador →</button><a class="btn" href="#jugador/${esc(this.cur.id)}">Ver su ficha</a></div>`
-            : `<form class="g-form" id="g-form">
-                <div class="search"><input type="search" id="g-input" list="g-list" placeholder="Escribe el nombre…" autocomplete="off" aria-label="Nombre del jugador" /></div>
+            ? `<div class="gx-actions"><button class="btn primary" id="gx-next">Siguiente jugador →</button><a class="btn" href="#jugador/${esc(this.cur.id)}">Ver su ficha</a></div>`
+            : `<form class="gx-form" id="gx-form">
+                <div class="search"><input type="search" id="gx-input" list="gx-list" placeholder="Escribe el nombre…" autocomplete="off" aria-label="Nombre del jugador" /></div>
                 <button class="btn primary" type="submit">Probar</button>
-                <button class="btn" type="button" id="g-skip">Rendirme</button>
-                <datalist id="g-list">${Players.data.players.map((p) => `<option value="${esc(p.name)}"></option>`).join("")}</datalist>
+                <button class="btn" type="button" id="gx-skip">Rendirme</button>
+                <datalist id="gx-list">${Players.data.players.map((p) => `<option value="${esc(p.name)}"></option>`).join("")}</datalist>
               </form>`}
         </div>
       </div>`;
-    if (this.over) return $("#g-next").addEventListener("click", () => this.next());
-    $("#g-form").addEventListener("submit", (e) => { e.preventDefault(); this.guess($("#g-input").value); });
-    $("#g-skip").addEventListener("click", () => this.finish(false));
+    if (this.over) return $("#gx-next").addEventListener("click", () => this.next());
+    $("#gx-form").addEventListener("submit", (e) => { e.preventDefault(); this.guess($("#gx-input").value); });
+    $("#gx-skip").addEventListener("click", () => this.finish(false));
   },
 
   guess(v) {
@@ -79,7 +85,7 @@ const Guess = {
     this.tries++;
     if (this.tries >= this.max) return this.finish(false);
     this.render(`❌ No es ${esc(v)}. Nueva pista desbloqueada.`);
-    $("#g-input").focus();
+    $("#gx-input").focus();
   },
 
   finish(won) {
