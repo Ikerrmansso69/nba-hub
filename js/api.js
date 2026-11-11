@@ -78,6 +78,29 @@ function parseEvent(ev) {
     tv: (comp.broadcasts ?? []).flatMap((b) => b.names ?? []).join(", "),
     home: side("home"),
     away: side("away"),
+    odds: parseOdds(comp.odds?.[0]),
+  };
+}
+
+// Cuotas de la casa que publica ESPN (DraftKings). Americanas → decimales.
+function parseOdds(o) {
+  if (!o) return null;
+  const dec = (a) => {
+    const n = parseFloat(String(a ?? "").replace("EVEN", "+100"));
+    if (!isFinite(n) || n === 0) return null;
+    return n > 0 ? 1 + n / 100 : 1 + 100 / -n;
+  };
+  const ml = o.moneyline ?? {};
+  const ps = o.pointSpread ?? {};
+  const tot = o.total ?? {};
+  const pick = (x) => x?.close ?? x?.open ?? {};
+  const spread = isFinite(parseFloat(pick(ps.home).line)) ? parseFloat(pick(ps.home).line) : isFinite(+o.spread) ? +o.spread : null;
+  const total = isFinite(+o.overUnder) && +o.overUnder > 0 ? +o.overUnder : null;
+  return {
+    provider: o.provider?.displayName ?? o.provider?.name ?? "",
+    mlHome: dec(pick(ml.home).odds), mlAway: dec(pick(ml.away).odds),
+    spread, spHome: dec(pick(ps.home).odds), spAway: dec(pick(ps.away).odds),
+    total, over: dec(pick(tot.over).odds), under: dec(pick(tot.under).odds),
   };
 }
 

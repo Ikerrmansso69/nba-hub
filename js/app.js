@@ -789,6 +789,10 @@ function route() {
     if (!Guess.pool) Guess.init();
     if (param === "liga" && extra) { Porra.addFriend(extra); history.replaceState(null, "", "#extras"); }
   }
+  if (view === "mercado") {
+    if (param === "liga" && extra) { Mercado.addFriend(extra); history.replaceState(null, "", "#mercado"); }
+    Mercado.open();
+  } else Mercado.stop();
   if (view === "hoy") Tonight.open(); else Tonight.stop();
   if (view === "multi") Multi.open(); else Multi.stop();
   if (view === "equipo" && param) TeamPage.open(param);

@@ -51,7 +51,7 @@ const Search = {
       ["Partidos", "#calendario", "Calendario y resultados"], ["Clasificación", "#clasificacion", "Tabla y cuadro de playoffs"],
       ["NBA Cup", "#nbacup", "Torneo de temporada"], ["Campeones", "#campeones", "Todas las Finales"],
       ["Historia", "#historia", "Línea temporal, MVP, Draft y dorsales retirados"], ["Equipos", "#equipos", "Los 30 equipos"],
-      ["Jugadores", "#jugadores", "Líderes, comparador y plantillas"], ["Porra y juegos", "#extras", "Porra, Adivina el jugador, trivia y récords"],
+      ["Jugadores", "#jugadores", "Líderes, comparador y plantillas"], ["Mercado de predicciones", "#mercado", "Apuesta monedas virtuales a cada partido"], ["Porra y juegos", "#extras", "Porra, Adivina el jugador, trivia y récords"],
     ].map(([name, href, sub]) => ({ type: "Sección", name, sub, href, keys: name }));
     const teams = TEAMS.map((t) => ({ type: "Equipo", name: t.name, sub: `${t.conf} · ${t.div}`, href: `#equipo/${t.abbr}`, img: LOGO(t.abbr), keys: `${t.name} ${t.city} ${t.abbr}` }));
     const players = (Players.data?.players ?? []).map((p) => ({ type: "Jugador", name: p.name, sub: `${p.teamName ?? p.team ?? ""} · ${p.pos ?? ""}`, href: `#jugador/${p.id}`, img: safeUrl(p.photo), round: true, keys: p.name }));

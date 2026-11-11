@@ -27,6 +27,7 @@ Web sobre la NBA en español: próximos partidos, temporada regular, clasificaci
 | **Carrera por el MVP** | Ranking con un índice propio (no oficial) basado en estadísticas y victorias |
 | **Comparador** | Dos jugadores cara a cara, estadística por estadística |
 | **Cuadro de playoffs** | Proyección de play-in y playoffs con la clasificación del día |
+| **Mercado de predicciones** | Monedas virtuales (sin dinero real): cuotas de ganador, hándicap y puntos totales de cada partido (de DraftKings vía ESPN cuando están publicadas, si no estimadas con el balance de cada equipo), apuestas que se pagan solas al terminar el partido, recarga diaria, historial y ranking con amigos por enlace |
 | **Juegos** | Porra diaria con liga entre amigos (por código, sin registro), Adivina el jugador, trivia con reloj de 24 s y récords |
 | **Historia** | Línea temporal, todos los MVP, números 1 del Draft desde 1980 y dorsales retirados |
 
@@ -65,6 +66,7 @@ js/app.js       # Lógica de la interfaz y navegación
 js/news.js      # Noticias en directo, lesiones, movimientos y avisos
 js/game.js      # Ficha de partido en directo
 js/players.js   # Fichas de jugador, comparador y líderes
+js/mercado.js   # Mercado de predicciones con monedas virtuales
 scripts/        # Copia de respaldo de los datos (GitHub Actions)
 sw.js           # Service worker (app instalable)
 ```
